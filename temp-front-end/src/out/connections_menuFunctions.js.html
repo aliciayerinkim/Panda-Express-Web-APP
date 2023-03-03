@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: connections/menuFunctions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: connections/menuFunctions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* This file will contain a functions that will fetch appropriate routes to get data from the database or edit the database
+* @author Justin Van Nimwegen - 930005547
+*/
+
+/**
+  * Get a next available menu_item_id in the menu_item table in databse by fetching appropriate routes and adding 1 to the response
+  * @param {}
+  * @return {number} - next available inventory_id
+  */
+async function findNextMenuId() {    
+    const response = await fetch('http://localhost:2000/api/v1/students/menuItems/menuId')
+    const data = await response.json()
+    const nextVal = data[0].menu_item_id + 1
+    return nextVal
+}
+
+/**
+  * Get a all data of menu_item table in databse ordered by menu_item_id by fetching appropriate routes in json
+  * @param {}
+  * @return {json} - all data of menu_item table in databse ordered by menu_item_id
+  */
+async function updateMenu() {
+    const response = await fetch('http://localhost:2000/api/v1/students/menuItems')
+    const data = await response.json()
+    return data;
+}
+
+/**
+  * Add a new row in menu_item table in database using parameters given and inventory_id found by using await
+  * Add a new row in ingredient_bridge table in database for every ingredients the parameter has
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {class} menu - MenuItem class
+  * @return {}
+  */
+async function addMenuItem(menu) {
+    // Updating menu item table
+    const menuID = await findNextMenuId()
+    const requestAMI = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({menuItemId: menuID, productName: menu.getProductName, salePrice: menu.getSalePrice, category: menu.getCategory})
+    }
+    const responseAMI = await fetch('http://localhost:2000/api/v1/students/menuItems/add', requestAMI)
+    const dataOMD = await responseAMI.json()
+
+    // Updating menu/ingredient Bridge Table
+    for(let i = 0; i &lt; menu.getIngredients.length; i++) {
+        const requestING = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ingredient: menu.getIngredients[i].getInventoryID, menu_item_id: menuID})
+        }
+        const responseING = await fetch('http://localhost:2000/api/v1/students/menuItems/add/ing', requestING)
+        const dataING = await responseING.json()
+    }
+
+}
+
+/**
+  * Delete a specific row in menu_item table in database using parameters given 
+  * Delete a specific row in ingredient_bridge table in database for every ingredients the parameter has
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {class} menu - MenuItem class
+  * @return {}
+  */
+async function deleteMenuItem(menu) {
+    // Updating menu item table
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({menuItemId: menu.getMenuItemId})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/menuItems/delete', request)
+    const data = await response.json()
+    
+    //Updating menyu/ingredient Bridge Table
+    const requestING = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({menu_item_id: menu.getMenuItemId})
+    }
+    const responseING = await fetch('http://localhost:2000/api/v1/students/menuItems/delete/ing', requestING)
+    const dataING = await responseING.json()
+}
+
+/**
+  * Update a specific row in menu_item table in database using parameters given
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} menuItemId - the id of menu item to be updated
+  * @param {number} newPrice - the new pricw of specific menu item that needs to be updated
+  * @return {}
+  */
+async function changeMenuPrice(menuItemId, newPrice) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({salePrice: newPrice, menuItem: menuItemId})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/menuItems/update', request)
+    const data = await response.json()
+}
+
+/**
+  * Get a product name from data of menu_item table in databse with specific menu_item_id
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} menuItemId - menu_item_id of specific menu item wanted
+  * @return {json} - menu name that has specific menu_item_id given in parameter
+  */
+async function getMenuItemName(menuItemId) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({menu_item_id: menuItemId})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/menuItems/getMenuItemName', request)
+    const data = await response.json()
+    
+    if (data.length > 0) {
+        return data[0].product_name
+    }
+    return ""
+}
+
+export {
+    updateMenu,
+    addMenuItem,
+    findNextMenuId,
+    deleteMenuItem,
+    changeMenuPrice,
+
+    getMenuItemName,
+}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Employee.html">Employee</a></li><li><a href="ExcessReport.html">ExcessReport</a></li><li><a href="ExcessReportItem.html">ExcessReportItem</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li><li><a href="Meal.html">Meal</a></li><li><a href="MealPrice.html">MealPrice</a></li><li><a href="MealType.html">MealType</a></li><li><a href="Menu.html">Menu</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="global.html#Order">Order</a></li><li><a href="Pair.html">Pair</a></li><li><a href="PairCollection.html">PairCollection</a></li><li><a href="RestockReport.html">RestockReport</a></li><li><a href="RestockReportItem.html">RestockReportItem</a></li><li><a href="SalesReport.html">SalesReport</a></li><li><a href="SalesReportItem.html">SalesReportItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#addInventoryItem">addInventoryItem</a></li><li><a href="global.html#addInventoryOrder">addInventoryOrder</a></li><li><a href="global.html#addMenuItem">addMenuItem</a></li><li><a href="global.html#changeMealPrice">changeMealPrice</a></li><li><a href="global.html#changeMenuPrice">changeMenuPrice</a></li><li><a href="global.html#checkEmployee">checkEmployee</a></li><li><a href="global.html#constructMeal">constructMeal</a></li><li><a href="global.html#deleteInventoryItem">deleteInventoryItem</a></li><li><a href="global.html#deleteMenuItem">deleteMenuItem</a></li><li><a href="global.html#findNextInventoryId">findNextInventoryId</a></li><li><a href="global.html#findNextInventoryOrderId">findNextInventoryOrderId</a></li><li><a href="global.html#findNextMealId">findNextMealId</a></li><li><a href="global.html#findNextMenuId">findNextMenuId</a></li><li><a href="global.html#findNextOrderId">findNextOrderId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getMealTypeInfo">getMealTypeInfo</a></li><li><a href="global.html#getMenuItemName">getMenuItemName</a></li><li><a href="global.html#getMinDate">getMinDate</a></li><li><a href="global.html#getOrder">getOrder</a></li><li><a href="global.html#inventoryOrderSQLStr">inventoryOrderSQLStr</a></li><li><a href="global.html#orderJoinSQLStr1">orderJoinSQLStr1</a></li><li><a href="global.html#orderJoinSQLStr2">orderJoinSQLStr2</a></li><li><a href="global.html#restockAmountSQLStr">restockAmountSQLStr</a></li><li><a href="global.html#salesReport">salesReport</a></li><li><a href="global.html#sellsTogetherData">sellsTogetherData</a></li><li><a href="global.html#sendMeal">sendMeal</a></li><li><a href="global.html#sendOrder">sendOrder</a></li><li><a href="global.html#translate">translate</a></li><li><a href="global.html#updateInventoryItemPrice">updateInventoryItemPrice</a></li><li><a href="global.html#updateInventoryItemQuantity">updateInventoryItemQuantity</a></li><li><a href="global.html#updateMenu">updateMenu</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 20:31:08 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

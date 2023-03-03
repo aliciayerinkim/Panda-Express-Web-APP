@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: connections/ReportFunctions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: connections/ReportFunctions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* This file will contain functions that will fetch appropriate routes to get data from the database or edit the database
+* @author Justin Van Nimwegen - 930005547
+*/
+
+/**
+  * Get data for sells report, with start time and end time given as parameter
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {string} startTime - start time of sells report
+  * @param {string} endTime - end time of sells report
+  * @return {json} - data for sells report between start time and end time
+  */
+async function sellsTogetherData(startTime, endTime) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({startTime: startTime, endTime: endTime})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/sellstogether', request)
+    const data= await response.json()
+    return data;
+}
+
+/**
+  * Get data for sales report, with inventory id, start time, and end time given as parameter
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} inventoryId - id of inventory item needed for sales report
+  * @param {string} startTime - start time of sells report
+  * @param {string} endTime - end time of sells report
+  * @return {json} - data for sales report for specific inventory item between start time and end time
+  */
+async function salesReport(inventoryId, startTime, endTime) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({inventoryId: inventoryId,startTime: startTime, endTime: endTime})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/salesReport', request)
+    const data= await response.json()
+    return data;
+}
+
+// Excess Report Functions
+
+/**
+  * Get lowest time_stamp from inventory_order table in database by fetching appropriate route
+  * @param {}
+  * @return {json} - lowest time_stamp from inventory_order table in database
+  */
+async function getMinDate() {    
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/excess/getMinDate')
+    const data = await response.json()
+    return data
+}
+
+/**
+  * gets the earlist timestamp from a specific date
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} inventoryItemId - the id of new inventory_order to be added
+  * @return {json} - JSON of a the earlist timestamo from the target date
+  */
+async function inventoryOrderSQLStr(targetDate) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({targetDate: targetDate})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/excess/inventoryOrderSQLStr', request)
+    const data= await response.json()
+    return data;
+}
+
+/**
+  * Helper function for excess report, gets amount sold of an addon ingredient over period of time
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} inventoryItemId - the id of the requested inventory item
+  * @param {string} startDate - start time for restock report
+  * @param {string} targetDate - end time fpr restock report
+  * @return {json} - JSON ofamount sold of an addon over period of time
+  */
+async function orderJoinSQLStr1(InventoryItemId, startDate, targetDate) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({InventoryItemId: InventoryItemId, startDate: startDate, targetDate: targetDate})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/excess/orderJoinSQLStr1', request)
+    const data= await response.json()
+    return data;
+}
+
+/**
+  * Helper function for excess report, gets amount sold of an ingredent within entree over period of time
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} inventoryItemId - the id of the requested inventory item
+  * @param {string} startDate - start time for restock report
+  * @param {string} targetDate - end time fpr restock report
+  * @return {json} - JSON ofamount sold of an addon over period of time
+  */
+async function orderJoinSQLStr2(InventoryItemId, startDate, targetDate) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({InventoryItemId: InventoryItemId, startDate: startDate, targetDate: targetDate})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/excess/orderJoinSQLStr2', request)
+    const data= await response.json()
+    return data;
+}
+
+/**
+  * Get the sum of the data from inventory_order table in database using parameters
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {number} inventoryItemId - the id of new inventory_order to be added
+  * @param {string} begin - start time for restock report
+  * @param {string} end - end time fpr restock report
+  * @return {json} - sum of the data from inventory_order table in database using parameters
+  */
+async function restockAmountSQLStr(inventoryItemId, begin, end) {
+    const request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({begin: begin, end: end, inventoryItemId: inventoryItemId})
+    }
+    const response = await fetch('http://localhost:2000/api/v1/students/reports/excess/restockAmountSQLStr', request)
+    const data= await response.json()
+    return data;
+}
+
+
+export {
+    sellsTogetherData,
+    salesReport,
+
+    getMinDate,
+    inventoryOrderSQLStr,
+    orderJoinSQLStr1,
+    orderJoinSQLStr2,
+    restockAmountSQLStr,
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Employee.html">Employee</a></li><li><a href="ExcessReport.html">ExcessReport</a></li><li><a href="ExcessReportItem.html">ExcessReportItem</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li><li><a href="Meal.html">Meal</a></li><li><a href="MealPrice.html">MealPrice</a></li><li><a href="MealType.html">MealType</a></li><li><a href="Menu.html">Menu</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="global.html#Order">Order</a></li><li><a href="Pair.html">Pair</a></li><li><a href="PairCollection.html">PairCollection</a></li><li><a href="RestockReport.html">RestockReport</a></li><li><a href="RestockReportItem.html">RestockReportItem</a></li><li><a href="SalesReport.html">SalesReport</a></li><li><a href="SalesReportItem.html">SalesReportItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#addInventoryItem">addInventoryItem</a></li><li><a href="global.html#addInventoryOrder">addInventoryOrder</a></li><li><a href="global.html#addMenuItem">addMenuItem</a></li><li><a href="global.html#changeMealPrice">changeMealPrice</a></li><li><a href="global.html#changeMenuPrice">changeMenuPrice</a></li><li><a href="global.html#checkEmployee">checkEmployee</a></li><li><a href="global.html#constructMeal">constructMeal</a></li><li><a href="global.html#deleteInventoryItem">deleteInventoryItem</a></li><li><a href="global.html#deleteMenuItem">deleteMenuItem</a></li><li><a href="global.html#findNextInventoryId">findNextInventoryId</a></li><li><a href="global.html#findNextInventoryOrderId">findNextInventoryOrderId</a></li><li><a href="global.html#findNextMealId">findNextMealId</a></li><li><a href="global.html#findNextMenuId">findNextMenuId</a></li><li><a href="global.html#findNextOrderId">findNextOrderId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getMealTypeInfo">getMealTypeInfo</a></li><li><a href="global.html#getMenuItemName">getMenuItemName</a></li><li><a href="global.html#getMinDate">getMinDate</a></li><li><a href="global.html#getOrder">getOrder</a></li><li><a href="global.html#inventoryOrderSQLStr">inventoryOrderSQLStr</a></li><li><a href="global.html#orderJoinSQLStr1">orderJoinSQLStr1</a></li><li><a href="global.html#orderJoinSQLStr2">orderJoinSQLStr2</a></li><li><a href="global.html#restockAmountSQLStr">restockAmountSQLStr</a></li><li><a href="global.html#salesReport">salesReport</a></li><li><a href="global.html#sellsTogetherData">sellsTogetherData</a></li><li><a href="global.html#sendMeal">sendMeal</a></li><li><a href="global.html#sendOrder">sendOrder</a></li><li><a href="global.html#translate">translate</a></li><li><a href="global.html#updateInventoryItemPrice">updateInventoryItemPrice</a></li><li><a href="global.html#updateInventoryItemQuantity">updateInventoryItemQuantity</a></li><li><a href="global.html#updateMenu">updateMenu</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 20:31:08 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

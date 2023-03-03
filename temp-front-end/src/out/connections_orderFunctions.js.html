@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: connections/orderFunctions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: connections/orderFunctions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* This file will contain a functions that will fetch appropriate routes to get data from the database or edit the database
+* @author Justin Van Nimwegen - 930005547
+*/
+import { Order } from "../classes/Order"
+import { Meal } from "../classes/Meal"
+
+import { getInventory, updateInventoryItemQuantity } from './inventoryFunctions';
+import { Inventory, InventoryItem } from '../classes/Inventory'
+import moment from 'moment';
+
+
+/**
+  * Get a next available order_id in the orders table in databse by fetching appropriate routes and adding 1 to the response
+  * @return {number} - next available order_id
+  */
+async function findNextOrderId() {     
+    const response = await fetch('http://localhost:2000/api/v1/students/orderID')
+    const data = await response.json()
+    const nextVal = data[0].order_id + 1
+    return nextVal
+}
+
+/**
+  * Get a next available meal_id in the meal table in databse by fetching appropriate routes and adding 1 to the response
+  * @return {number} - next available inventory_meal_idid
+  */
+async function findNextMealId() {    
+    const response = await fetch('http://localhost:2000/api/v1/students/mealID')
+    const data = await response.json()
+    const nextVal = data[0].meal_id + 1
+    return nextVal
+}
+
+/**
+  * Given a meal, updates the various tables with its data
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {string} orderID - orderid that the meal is a part of
+  * @param {meal} meal - meal to be added
+  * @param {Inventory} inv - current state of inventory
+  * @return {}
+  */
+async function sendMeal(orderID, meal, inv) {
+    // order_meals_bridge table
+    let mealID = await findNextMealId()
+    const requestOMB = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({orderId: orderID, mealId: mealID})
+    }
+    const responseOMD = await fetch('http://localhost:2000/api/v1/students/meal/orderMeals', requestOMB)
+    const dataOMD = await responseOMD.json()
+    // meal table
+    const requestM = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mealId: mealID, mealTypeId: meal.getMealTypeId, sideId: meal.getSideId})
+    }
+    const responseM = await fetch('http://localhost:2000/api/v1/students/meal/meal', requestM)
+    const dataM = await responseM.json()
+
+
+    // meal_items_bridge
+    for(var i = 0; i &lt; meal.getEntrees.length; i++) {
+        const requestMIB = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mealId: mealID, menuItemId: meal.getEntrees[i]})
+        }
+        const responseMIB = await fetch('http://localhost:2000/api/v1/students/meal/mealItem', requestMIB)
+        const dataMIB = await responseMIB.json()
+
+
+        // De-incrementing ingredients for every entree
+        const requestIB = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({menu_item_id: meal.getEntrees[i]})
+        }
+        const responseIB = await fetch('http://localhost:2000/api/v1/students/menuItems/getIngredients', requestIB)
+        const dataIB = await responseIB.json()
+
+        for(let j = 0; j &lt; dataIB.length; j++) {
+            let item = inv.getInventoryItemFromID(dataIB[j].inventory_order_id);
+            let quantity = item.getQuantity - 1
+            item.setQuantity = quantity
+            await updateInventoryItemQuantity(item.getInventoryName, quantity)
+        }
+    }
+
+    //De-incrementing ingredienrs for the side
+
+    const requestIB = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({menu_item_id: meal.getSideId})
+    }
+    const responseIB = await fetch('http://localhost:2000/api/v1/students/menuItems/getIngredients', requestIB)
+    const dataIB = await responseIB.json()
+
+    for(let j = 0; j &lt; dataIB.length; j++) {
+        let item = inv.getInventoryItemFromID(dataIB[j].inventory_order_id);
+        let quantity = item.getQuantity - 1
+        item.setQuantity = quantity
+        await updateInventoryItemQuantity(item.getInventoryName, quantity)
+    }
+}
+
+/**
+  * Given a order, updates the various tables with its data
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {Order} order - order to be added
+  * @return {}
+  */
+async function sendOrder(order) {
+    let data = await getInventory();
+    let inv = new Inventory(data);
+
+    const orderID = await findNextOrderId()
+    const timestamp = moment().format('YYYY-MM-DD hh:mm:ss');
+
+    const requestO = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({orderId: orderID, timeStamp: timestamp, employeeId: order.getEmployeeId, orderTotal: order.getOrderTotal})
+    }
+    const responseO = await fetch('http://localhost:2000/api/v1/students/order', requestO)
+    const dataO = await responseO.json()
+
+
+     // order_addOn_items
+     for(var i = 0; i &lt; order.getAddOnIds.length; i++) {
+        const requestAO = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({orderId: orderID, addOnItemId: order.getAddOnIds[i]})
+        }
+        const responseAO = await fetch('http://localhost:2000/api/v1/students/addOn', requestAO)
+
+        const dataAO = await responseAO.json()
+
+        // Updating Inventory
+        let item = inv.getInventoryItemFromID(order.getAddOnIds[i]);
+        let quantity = item.getQuantity - 1
+        item.setQuantity = quantity
+        await updateInventoryItemQuantity(item.getInventoryName, quantity)
+
+    }
+    
+
+    for(var j = 0; j &lt; order.meals.length; j++) {
+        await sendMeal(orderID, order.meals[j], inv)
+    }
+
+    // Sending Misc Items Updates
+
+    // Getting current inventory
+
+    for(let i = 0; i &lt; order.getMiscItemIds.length; i++) {
+        let item = inv.getInventoryItemFromName(order.getMiscItemIds[i]);
+        let quantity = item.getQuantity - 1
+        item.setQuantity = quantity
+        await updateInventoryItemQuantity(order.getMiscItemIds[i], quantity)
+    }
+    return orderID;
+}
+
+// Get order information
+
+/**
+  * Called from getOrder, given a mealID constuct a meal object to return
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {Number} mealid - order to be added
+  * @return {Meal} Constructed order object
+  */
+async function constructMeal(mealId) {
+    //Getting Meal Information
+    const requestM = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({meal_id: mealId})
+    }
+    const responseM = await fetch('http://localhost:2000/api/v1/students/order/getMeals', requestM)
+    const mealInfo = await responseM.json()
+
+    if(mealInfo.length == 0) {
+        console.log("ERROR IN constructMeal")
+        return null;
+    }
+
+    //Getting entrees
+
+    const requestMIB = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({meal_id: mealId})
+    }
+    const responseMIB = await fetch('http://localhost:2000/api/v1/students/order/getMealItems', requestMIB)
+    const mibInfo = await responseMIB.json()
+
+    let entrees = []
+    for(let i = 0; i &lt; mibInfo.length; i++) {
+        entrees.push(mibInfo[i].menu_item_id)
+    }
+
+    let meal = new Meal(mealInfo[0].side_id, entrees, mealInfo[0].meal_type_id)
+    return meal
+
+}
+
+/**
+  * Given an order id, constroct an order object to return
+  * Fetch appropriate routes with request whose body is built with given parameter
+  * @param {Number} orderid - order to be added
+  * @return {Order} Constructed order object
+  */
+async function getOrder(orderID) {
+    // HOW TO USE: 
+    // IMPORTS: 
+    // import { Order } from "../classes/Order"
+    // import { getOrder } from "../connections/orderFunctions" 
+
+    //Usestate/effect: 
+    // const [orderName, setOrderName] = useState(new Order())
+    //   useEffect(() => {
+    //       async function getOrderData() {
+    //           let data = await getOrder(10) 
+    //           setOrderName(data);
+    //       }
+    //       getOrderData();
+    //   }, []);
+    //   console.log("order: ", orderName)
+
+    // Main Order information
+    
+    const requestO = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({order_id: orderID})
+    }
+    const responseO = await fetch('http://localhost:2000/api/v1/students/order/getOrder', requestO)
+    const orderInfo = await responseO.json()
+    if (orderInfo.length === 0) {
+        console.log("null: ", orderInfo)
+        return null;
+    } 
+
+    // order_addOn_items
+
+    const requestAO = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({order_id: orderID})
+    }
+
+    const responseAO = await fetch('http://localhost:2000/api/v1/students/order/getAddOnItems', requestAO)
+    const dataAO = await responseAO.json()
+
+    let orderAddOnIds = []
+    for(var i = 0; i &lt; dataAO.length; i++) {
+        orderAddOnIds.push(dataAO[i].addon_item_id)
+    }
+    
+    // Meals items
+
+    const requestM = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({order_id: orderID})
+    }
+    const responseM = await fetch('http://localhost:2000/api/v1/students/order/getMealIds', requestM)
+    const dataM = await responseM.json()
+
+    let meals = []
+
+    for(var j = 0; j &lt; dataM.length; j++) {
+        let meal = await constructMeal(dataM[j].meal_id)
+        meals.push(meal)
+    }
+
+    let newOrder = new Order(meals, orderAddOnIds, orderInfo[0].order_total, orderInfo[0].employee_id);
+    return newOrder;
+}
+
+
+export {
+    findNextOrderId,
+    findNextMealId,
+    sendMeal,
+    sendOrder,
+
+    getOrder,
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Employee.html">Employee</a></li><li><a href="ExcessReport.html">ExcessReport</a></li><li><a href="ExcessReportItem.html">ExcessReportItem</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li><li><a href="Meal.html">Meal</a></li><li><a href="MealPrice.html">MealPrice</a></li><li><a href="MealType.html">MealType</a></li><li><a href="Menu.html">Menu</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="global.html#Order">Order</a></li><li><a href="Pair.html">Pair</a></li><li><a href="PairCollection.html">PairCollection</a></li><li><a href="RestockReport.html">RestockReport</a></li><li><a href="RestockReportItem.html">RestockReportItem</a></li><li><a href="SalesReport.html">SalesReport</a></li><li><a href="SalesReportItem.html">SalesReportItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#addInventoryItem">addInventoryItem</a></li><li><a href="global.html#addInventoryOrder">addInventoryOrder</a></li><li><a href="global.html#addMenuItem">addMenuItem</a></li><li><a href="global.html#changeMealPrice">changeMealPrice</a></li><li><a href="global.html#changeMenuPrice">changeMenuPrice</a></li><li><a href="global.html#checkEmployee">checkEmployee</a></li><li><a href="global.html#constructMeal">constructMeal</a></li><li><a href="global.html#deleteInventoryItem">deleteInventoryItem</a></li><li><a href="global.html#deleteMenuItem">deleteMenuItem</a></li><li><a href="global.html#findNextInventoryId">findNextInventoryId</a></li><li><a href="global.html#findNextInventoryOrderId">findNextInventoryOrderId</a></li><li><a href="global.html#findNextMealId">findNextMealId</a></li><li><a href="global.html#findNextMenuId">findNextMenuId</a></li><li><a href="global.html#findNextOrderId">findNextOrderId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getMealTypeInfo">getMealTypeInfo</a></li><li><a href="global.html#getMenuItemName">getMenuItemName</a></li><li><a href="global.html#getMinDate">getMinDate</a></li><li><a href="global.html#getOrder">getOrder</a></li><li><a href="global.html#inventoryOrderSQLStr">inventoryOrderSQLStr</a></li><li><a href="global.html#orderJoinSQLStr1">orderJoinSQLStr1</a></li><li><a href="global.html#orderJoinSQLStr2">orderJoinSQLStr2</a></li><li><a href="global.html#restockAmountSQLStr">restockAmountSQLStr</a></li><li><a href="global.html#salesReport">salesReport</a></li><li><a href="global.html#sellsTogetherData">sellsTogetherData</a></li><li><a href="global.html#sendMeal">sendMeal</a></li><li><a href="global.html#sendOrder">sendOrder</a></li><li><a href="global.html#translate">translate</a></li><li><a href="global.html#updateInventoryItemPrice">updateInventoryItemPrice</a></li><li><a href="global.html#updateInventoryItemQuantity">updateInventoryItemQuantity</a></li><li><a href="global.html#updateMenu">updateMenu</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 20:31:08 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

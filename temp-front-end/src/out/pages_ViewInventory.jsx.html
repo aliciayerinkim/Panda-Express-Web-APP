@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/ViewInventory.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/ViewInventory.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, {useState, useEffect}from 'react';
+import '../components/styles.scss';
+import '../components/livealert.js';
+import ManagerNav from "../components/ManagerNav";
+import Footer from "../components/Footer";
+import { getInventory } from '../connections/inventoryFunctions'
+import { Inventory } from '../classes/Inventory'
+import { Button } from 'react-bootstrap';
+
+/**
+ * Allows managers to view the current
+ * stock of the inventory, including price of
+ * each inventory item and current quantity.
+ * @author Molly Frost
+ */
+
+function ViewInventory(){
+    const [inventory, setInventory] = useState(new Inventory())
+
+    useEffect(() => {
+      async function getInv() {
+        let data = await getInventory();
+        var inv = new Inventory(data);
+        setInventory(inv);
+      }
+      getInv();
+    }, []);
+
+    return (
+        &lt;div className="view inventory">
+          &lt;ManagerNav />&lt;div class="container overflow-hidden text-center">
+            &lt;h1 class="mb-3" style={{paddingTop: 40, fontWeight: 800}}>Inventory Dashboard&lt;/h1>
+            &lt;div class="row gx-5" style={{paddingTop: 10}}>
+              &lt;div class="col align-items-middle justify-content-center">
+                &lt;Button variant="panda-btn btn-block mt-3" size="lg" class="bg-red text-white" href='/manager-dashboard/view-inventory/add-inventory-item' style={{fontWeight: 800}}>ADD INVENTORY ITEM&lt;/Button>
+                &lt;Button variant="panda-btn btn-block mt-3" size="lg" class="bg-red text-white" href='/manager-dashboard/view-inventory/delete-inventory-item' style={{fontWeight: 800}}>DELETE INVENTORY ITEM&lt;/Button>
+              &lt;/div>
+              &lt;div class="col">
+                &lt;Button variant="panda-btn btn-block mt-3" size="lg" class="bg-red text-white" href='/manager-dashboard/view-inventory/edit-inventory-price' style={{fontWeight: 800}}>EDIT INVENTORY PRICE&lt;/Button>
+                &lt;Button variant="panda-btn btn-block mt-3" size="lg" class="bg-red text-white" href='/manager-dashboard/order-inventory' style={{fontWeight: 800}}>INVENTORY ORDER&lt;/Button>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>
+          &lt;div className="container">
+          &lt;p class="fs-4" style={{paddingTop: 30, fontWeight: 800}}>Inventory:&lt;/p>
+            &lt;div className="container text-center">
+              &lt;h1 className="mb-3" style={{fontWeight: 800}}>&lt;/h1>
+            &lt;/div>
+            &lt;table className="table table-hover table-striped overflow-auto" style={{height: '60vh'}}>
+              &lt;thead>
+                &lt;tr>
+                  &lt;th scope="col">#&lt;/th>
+                  &lt;th scope="col">Inventory Item&lt;/th>
+                  &lt;th scope="col">Unit Purchase Price&lt;/th>
+                  &lt;th scope="col">Quantity&lt;/th>
+                &lt;/tr>
+              &lt;/thead>
+              &lt;tbody>
+                {
+                  inventory.getItems.map((item) => (
+                    &lt;tr>
+                    &lt;th scope="row">{item.getInventoryID}&lt;/th>
+                    &lt;td>{item.getInventoryName}&lt;/td>
+                    &lt;td>{item.getUnitPrice}&lt;/td>
+                    &lt;td>{item.getQuantity}&lt;/td>
+                  &lt;/tr>
+                  ))
+                }
+              &lt;/tbody>
+            &lt;/table>
+          &lt;/div>
+          &lt;br/>
+          &lt;br/>
+          &lt;Footer />
+        &lt;/div>
+    );
+}
+
+export default ViewInventory; </code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

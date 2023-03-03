@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/Reports.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/Reports.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import '../components/styles.scss';
+import ManagerNav from "../components/ManagerNav";
+import Footer from "../components/Footer";
+import { PairCollection }  from "../classes/PairsReport";
+import { RestockReport } from "../classes/RestockReport";
+import { SalesReport } from '../classes/salesReport';
+import { ExcessReport } from '../classes/ExcessReport';
+
+import { Button } from 'react-bootstrap';
+import React, {useState, useEffect} from 'react';
+
+function SalesReportView(props) { 
+
+    const [salesReport, setSalesReport] = useState(new SalesReport())
+    useEffect(() => {
+      async function generateReport() {
+          let report = new SalesReport()
+          await report.generateSalesReport(props.inventoryId, props.startDate, props.endDate)
+          console.log("salesReport:", salesReport);
+          setSalesReport(report)
+      }
+      generateReport();
+    }, []);
+
+    return (
+      &lt;div class="container overflow-hidden text-center">
+        &lt;h1 class="mb-3" style={{fontWeight: 600, fontSize: 32}}>Sales Report: {props.startDate} to {props.endDate} for item {props.inventoryId}&lt;/h1>
+        &lt;table className="table table-hover table-striped overflow-auto" style={{height: '60vh'}}>
+            &lt;thead>
+                &lt;tr>
+                &lt;th scope="col">Time&lt;/th>
+                &lt;th scope="col">Order Id&lt;/th>
+                &lt;th scope="col">Sale Amount&lt;/th>
+                &lt;th scope="col">More Info&lt;/th>
+                &lt;/tr>
+            &lt;/thead>
+            &lt;tbody>
+                {
+                salesReport.getSalesReportItems.map((item) => (
+                    &lt;tr>
+                    &lt;th scope="row">{item.getTime}&lt;/th>
+                    &lt;td>{item.getOrderId}&lt;/td>
+                    &lt;td>{item.getMoney}&lt;/td>
+                    &lt;td>&lt;Button variant="panda-btn" size="sm" style={{fontWeight: 400}}>more info&lt;/Button>&lt;/td>
+                    &lt;/tr>
+                ))
+                }
+            &lt;/tbody>
+        &lt;/table>
+      &lt;/div>
+    );
+}
+
+function PairsReportView(props) {
+
+    const [pairsReport, setPairsReport] = useState(new PairCollection())
+    useEffect(() => {
+        async function generatePairs() {
+            let report = new PairCollection()
+            await report.sellsTogether(props.startDate, props.endDate)
+            console.log(report.getPairs);
+            setPairsReport(report)
+        }
+        generatePairs();
+    }, []);
+
+    return (
+      &lt;div class="container overflow-hidden text-center">
+        &lt;h1 class="mb-3" style={{fontWeight: 600, fontSize: 32}}>Pairs Report: {props.startDate} to {props.endDate}&lt;/h1>
+        &lt;table className="table table-hover table-striped overflow-auto" style={{height: '60vh'}}>
+            &lt;thead>
+                &lt;tr>
+                &lt;th scope="col">Rank&lt;/th>
+                &lt;th scope="col">Item 1&lt;/th>
+                &lt;th scope="col">Item 2&lt;/th>
+                &lt;th scope="col">Pair Proportion&lt;/th>
+                &lt;/tr>
+            &lt;/thead>
+            &lt;tbody>
+                {
+                pairsReport.getPairs.map((item) => (
+                    &lt;tr>
+                    &lt;th scope="row">{item.getRank}&lt;/th>
+                    &lt;td>{item.getFirstItemIndex}&lt;/td>
+                    &lt;td>{item.getSecondItemIndex}&lt;/td>
+                    &lt;td>{item.getPorportionPercent.toFixed(2)}&lt;/td>
+                    &lt;/tr>
+                ))
+                }
+            &lt;/tbody>
+        &lt;/table>
+      &lt;/div>
+    );
+  }
+
+function RestockReportView() {
+    const [restockReport, setRestockReport] = useState(new RestockReport())
+    useEffect(() => {
+        console.log(1);
+        async function generateReport() {
+            let report = new RestockReport()
+            console.log(3);
+            await report.restockReport()
+            console.log(report.getRestockReportItems)
+            setRestockReport(report)
+        }
+        console.log(2);
+        generateReport();
+    }, []);
+
+    return (
+        &lt;div class="container overflow-hidden text-center">
+            &lt;h1 class="mb-3" style={{fontWeight: 600, fontSize: 32}}>Restock Report&lt;/h1>
+            &lt;table className="table table-hover table-striped overflow-auto" style={{height: '60vh'}}>
+                &lt;thead>
+                    &lt;tr>
+                    &lt;th scope="col">Item&lt;/th>
+                    &lt;th scope="col">Inventory Amount&lt;/th>
+                    &lt;/tr>
+                &lt;/thead>
+                &lt;tbody>
+                    {
+                    restockReport.getRestockReportItems.map((item) => (
+                        &lt;tr>
+                        &lt;th scope="row">{item.getItemName}&lt;/th>
+                        &lt;td>{item.getCurrentInventory}&lt;/td>
+                        &lt;/tr>
+                    ))
+                    }
+                &lt;/tbody>
+            &lt;/table>
+      &lt;/div>
+    );
+}
+
+function ExcessReportView(props) {
+    const [excessReport, setExcessReport] = useState(new ExcessReport())
+    useEffect(() => {
+      async function generateER() {
+          let report = new ExcessReport();
+          await report.excessReport(props.startDate, props.endDate);
+          setExcessReport(report);
+          console.log("excess report:", report.getItems);
+      }
+      generateER();
+    }, []);
+
+    return (
+        &lt;div class="container overflow-hidden text-center">
+            &lt;h1 class="mb-3" style={{fontWeight: 600, fontSize: 32}}>Excess Report: {props.startDate} to {props.endDate} &lt;/h1>
+            &lt;table className="table table-hover table-striped overflow-auto" style={{height: '60vh'}}>
+                &lt;thead>
+                    &lt;tr>
+                    &lt;th scope="col">Item&lt;/th>
+                    &lt;th scope="col">Percentage Sold&lt;/th>
+                    &lt;/tr>
+                &lt;/thead>
+                &lt;tbody>
+                    {
+                    excessReport.getItems.map((item) => (
+                        &lt;tr>
+                        &lt;th scope="row">{item.getItemName}&lt;/th>
+                        &lt;td>{item.getPercentage}&lt;/td>
+                        &lt;/tr>
+                    ))
+                    }
+                &lt;/tbody>
+            &lt;/table>
+      &lt;/div>
+    );
+}
+
+/**
+ * Allows a manager to see various reports relating
+ * to item sales.
+ * @author Aaron Su
+ */
+function Reports(){
+    const [ReportIdx, setReportIdx] = useState(0);
+    const [isShown, setIsShown] = useState(false);
+    const [startDate, setStartDate] = useState();
+    const [endDate, setEndDate] = useState();
+    const [inventoryId, setInventoryId] = useState();
+
+    function MuxReportView(props) {
+        return(&lt;div className="col-lg-8 text-center">
+                {(props.ReportIdx === 1) &amp;&amp; &lt;SalesReportView startDate={props.startDate} endDate={props.endDate} inventoryId={props.inventoryId} />}
+                {(props.ReportIdx === 2) &amp;&amp; &lt;ExcessReportView startDate={props.startDate} endDate={props.endDate} />}
+                {(props.ReportIdx === 3) &amp;&amp; &lt;RestockReportView />}
+                {(props.ReportIdx === 4) &amp;&amp; &lt;PairsReportView startDate={props.startDate} endDate={props.endDate} />}
+        &lt;/div>);
+    }
+
+    return (
+        &lt;div>
+          &lt;ManagerNav />
+          &lt;div class="container">
+            &lt;div class="row gx-5 justify-content-front my-5">
+              &lt;div class="col-lg-4 text-center">
+                &lt;form>
+                    &lt;div className="dropdown">
+                        &lt;Button variant="panda-btn mt-3" size="lg" class="bg-red text-white" style={{fontWeight: 800}} data-bs-toggle="dropdown" aria-expanded="false">
+                            SELECT REPORT
+                        &lt;/Button>
+                        &lt;ul className="dropdown-menu" onClick={() => setIsShown(false)}>
+                            &lt;li>&lt;a className="dropdown-item" onClick={() => setReportIdx(1)} href="#1"> SALES   &lt;/a>&lt;/li>
+                            &lt;li>&lt;a className="dropdown-item" onClick={() => setReportIdx(2)} href="#2"> EXCESS  &lt;/a>&lt;/li>
+                            &lt;li>&lt;a className="dropdown-item" onClick={() => setReportIdx(3)} href="#3"> RESTOCK &lt;/a>&lt;/li>
+                            &lt;li>&lt;a className="dropdown-item" onClick={() => setReportIdx(4)} href="#4"> PAIRS   &lt;/a>&lt;/li>
+                        &lt;/ul>
+                    &lt;/div>
+                    &lt;Button onClick={() => {setIsShown(true)}} variant="panda-btn mt-3" size="lg" class="mt-3 bg-red text-white" style={{fontWeight: 800}}>
+                            SUBMIT
+                    &lt;/Button>
+                    {(ReportIdx === 1 || ReportIdx === 2 || ReportIdx === 4) &amp;&amp; &lt;div class="form-group">
+                        &lt;label>Start Date&lt;/label>
+                        &lt;input 
+                          type="date" 
+                          class="form-control" 
+                          placeholder="Enter start date"
+                          onChange={event => setStartDate(event.target.value)}
+                          value={startDate}
+                        />
+                    &lt;/div>}
+                    {(ReportIdx === 1 || ReportIdx === 2 || ReportIdx === 4) &amp;&amp; &lt;div class="form-group">
+                        &lt;label>End Date&lt;/label>
+                        &lt;input type="date"
+                         class="form-control"
+                         placeholder="Enter end date"
+                         onChange={event => setEndDate(event.target.value)}
+                         value={endDate}
+                        />
+                    &lt;/div>}
+
+                    {(ReportIdx === 1) &amp;&amp; &lt;div class="form-group">
+                        &lt;label>Inventory Id&lt;/label>
+                        &lt;input type="number"
+                         class="form-control"
+                         placeholder="Enter Inventory ID"
+                         onChange={event => setInventoryId(event.target.value)}
+                         value={inventoryId}
+                        />
+                    &lt;/div>}
+                &lt;/form>
+              &lt;/div>
+              {isShown &amp;&amp; &lt;MuxReportView ReportIdx={ReportIdx} startDate={startDate} endDate= {endDate} inventoryId={inventoryId}/>}
+            &lt;/div>
+          &lt;/div>
+          &lt;Footer />
+        &lt;/div>
+      );
+} 
+export default Reports;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

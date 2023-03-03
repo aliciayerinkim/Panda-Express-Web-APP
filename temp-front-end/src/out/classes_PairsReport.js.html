@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/PairsReport.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/PairsReport.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { sellsTogetherData } from '../connections/ReportFunctions'
+
+/*
+HOW TO CALL AND CREATE THE PAIRS REPORT
+  
+  const [pairsReport, setPairsReport] = useState(new PairCollection())
+  useEffect(() => {
+    async function generatePairs() {
+        let report = new PairCollection()
+        await report.sellsTogether(startTime, endTime)
+        setPairsReport(report)
+    }
+    generatePairs();
+  }, []);
+
+THE DATES MUST BE FORMATTED LIKE WHAT IS SHOWN
+report.getPairs will be an array of size 10, already sorted by rank, of pair objects
+*/
+
+/**
+ * This class, Pair, holds all the information each Pair can hold
+ * It also has constructor to create new Pair item and get and set functions to get the informations and modify information locally
+ * 
+ * @author Justin Van Nimwegen - 930005547 - Project 3
+ *
+ */
+class Pair {
+    private
+        firstItemIndex = -1;
+        secondItemIndex = -1;
+        rank = -1;
+        porportionPercent = 0.0;
+    /**
+     * Constructor to create a Pair Object
+     * @param {Number} firstItemIndex - First item id
+     * @param {Number} secondItemIndex - Second Item Id
+     * @param {Number} rank - Compared to the others
+     * @param {Number} porportionPercent - percantage that the second item is ordered when the first item is firstItemIndex
+     * @return {Pair} a constructed local Pair
+     */
+    constructor(firstItemIndex, secondItemIndex, rank, porportionPercent) {
+        this.firstItemIndex = firstItemIndex;
+        this.secondItemIndex = secondItemIndex;
+        this.rank = rank;
+        this.porportionPercent = porportionPercent;
+    }
+    
+    /**
+     * Getter for firstItemIndex
+     * @return {Number} firstItemIndex
+     */
+    get getFirstItemIndex() {
+        return this.firstItemIndex
+    }
+
+    /**
+     * Getter for secondItemIndex
+     * @return {Number} secondItemIndex
+     */
+    get getSecondItemIndex() {
+        return this.secondItemIndex
+    }
+
+    /**
+     * Getter for rank
+     * @return {Number} rank
+     */
+    get getRank() {
+        return this.rank
+    }
+
+    /**
+     * Getter for porportionPercent
+     * @return {Number} porportionPercent
+     */
+    get getPorportionPercent() {
+        return this.porportionPercent;
+    }
+}
+/**
+ * This class, PairCollection, holds all the information each PairCollection can hold
+ * It also has constructor to create new PairCollectionitem and get and set functions to get the informations and modify information locally
+ * 
+ * @author Justin Van Nimwegen - 930005547 - Project 3
+ *
+ */
+class PairCollection {
+    private
+        pairs = []
+
+    /**
+     * Constructor to create a PairCollection Object
+     * @return {PairCollection} a constructed local PairCollection
+     */
+    constructor() {
+        this.pairs = [];
+    }
+    
+    /**
+     * Getter for pairs
+     * @return {Array} pairs
+     */
+    get getPairs() {
+        return this.pairs
+    }
+
+    /**
+     * Calculates and sets the pairs array
+     * @param {String} startTime - Start Time
+     * @param {String} endTime - End Time
+     */
+    async sellsTogether(startTime, endTime) {
+        //Lines i think will fail: 72,75, 122, 163, 164
+        let data = await sellsTogetherData(startTime, endTime);
+        //console.log(data);
+    
+        const menuItemPairsMap = new Map(); // Map&lt;Integer, Map&lt;Integer, Integer>>
+        const parrallelPorpotions = new Map(); // Map&lt;Integer, Map&lt;Integer, Double>>
+
+        // calculacte main 2d array
+        var currMeal = 0
+        var menuIds = [];
+        for(let i = 0; i &lt; data.length; i ++) {
+            let mealId = data[i].meal_id;
+            let menuItemId = data[i].menu_item_id;
+            if (currMeal == mealId) {
+                menuIds.push(menuItemId);
+            }else {
+                if (menuIds.length > 1) {
+                    for(let i = 0; i &lt; menuIds.length; i++) { 
+                        for(let j = 1; j &lt; menuIds.length; j++) {
+                            let currentIndexedMap = menuItemPairsMap.get(menuIds[0]);
+
+                            if (currentIndexedMap == null) {
+                                currentIndexedMap = new Map();
+                                menuItemPairsMap.set(menuIds[0], currentIndexedMap);
+                            }
+                            if (currentIndexedMap.get(menuIds[j]) == null) {
+                                
+                                menuItemPairsMap.get(menuIds[0]).set(menuIds[j], 0); 
+                            }
+                            
+                            currentIndexedMap.set(menuIds[j], currentIndexedMap.get(menuIds[j]) + 1); //increments the sub loop e value by 1
+                            menuItemPairsMap.set(menuIds[0], currentIndexedMap); // updates the origional 2d map with the new incremented subMap 
+                        }
+                    }
+                    let tempId = menuIds[0];
+                    menuIds.shift();
+                    menuIds.push(tempId);
+                }
+            
+                //reset variables
+                menuIds =[];
+
+                //set new variables
+                currMeal = mealId;
+                menuIds.push(menuItemId);
+            }
+
+        }
+        // process last meal
+        if (menuIds.length != 1) {
+            for(let i = 0; i &lt; menuIds.length; i++) {
+                for(let incrementMenuId in menuIds.slice(1, menuIds.length)) {
+                    //stared line in psuedoCode:
+                    var currentIndexedMap = menuItemPairsMap.get(menuIds[0]);
+                    
+                    if (currentIndexedMap == null) {
+                        currentIndexedMap = new Map();
+                        currentIndexedMap.set(incrementMenuId, 0);
+                    }
+                    if (currentIndexedMap.get(incrementMenuId) == null) {
+                        menuItemPairsMap.get(menuIds[0]).set(incrementMenuId, 0); 
+                    }
+
+                    currentIndexedMap.set(incrementMenuId, currentIndexedMap.get(incrementMenuId) + 1); //increments the sub loop e value by 1
+                    menuItemPairsMap.set(menuIds[0], currentIndexedMap); // updates the origional 2d map with the new incremented subMap 
+                }
+            }
+            let tempId = menuIds[0];
+            menuIds.shift();
+            menuIds.push(tempId);
+        }
+
+        // run parallel loop
+        //      - run through main 2d array, and sum for each item
+        //      - add porportion value for every element in 2d array
+
+        menuItemPairsMap.forEach (function(value, key) {
+            let menuId = key;
+            parrallelPorpotions.set(menuId, null)
+            //let sum = sum of subMap array
+            let sum = 0;  
+            value.forEach (function(value2, key2){ 
+                sum += value2;
+            })
+            
+            value.forEach (function(value2, key2){
+                let newMap = parrallelPorpotions.get(menuId)  //Map&lt;Integer, Double>
+                if (newMap == null) {
+                    newMap = new Map();
+                }
+
+                newMap.set(key2, value2/sum);
+                parrallelPorpotions.set(menuId, newMap);
+            }) 
+
+        })
+
+
+        // find top 10 highest porportions
+        //      - loop 10 times:
+        //          - loop though 2D and find highest porportion
+        //          - create and add new pair to final report and set porprtion to min
+        for (let i =0; i &lt; 10; i++) {
+            //Find max porportion
+            let currentMax = 0;
+            let menuIdex1 = 0;
+            let menuIdex2 = 0;
+
+
+
+            parrallelPorpotions.forEach (function(value, key){
+                let menuId = key;
+
+                value.forEach (function(value2, key2){
+                    let currPorportion = value2;
+                    if (currPorportion > currentMax) {
+                        currentMax = currPorportion;
+                        menuIdex1 = menuId;
+                        menuIdex2 = key2;
+                    }
+                })
+            })
+
+            if (parrallelPorpotions.has(menuIdex1)) {
+                parrallelPorpotions.get(menuIdex1).set(menuIdex2, 0);
+            }
+            let newPair = new Pair(menuIdex1, menuIdex2, i + 1, (currentMax*1000)/10);
+            this.pairs.push(newPair)
+        }
+    }
+    
+}
+
+export { Pair, PairCollection } </code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Employee.html">Employee</a></li><li><a href="ExcessReport.html">ExcessReport</a></li><li><a href="ExcessReportItem.html">ExcessReportItem</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li><li><a href="Meal.html">Meal</a></li><li><a href="MealPrice.html">MealPrice</a></li><li><a href="MealType.html">MealType</a></li><li><a href="Menu.html">Menu</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="global.html#Order">Order</a></li><li><a href="Pair.html">Pair</a></li><li><a href="PairCollection.html">PairCollection</a></li><li><a href="RestockReport.html">RestockReport</a></li><li><a href="RestockReportItem.html">RestockReportItem</a></li><li><a href="SalesReport.html">SalesReport</a></li><li><a href="SalesReportItem.html">SalesReportItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#addInventoryItem">addInventoryItem</a></li><li><a href="global.html#addInventoryOrder">addInventoryOrder</a></li><li><a href="global.html#addMenuItem">addMenuItem</a></li><li><a href="global.html#changeMealPrice">changeMealPrice</a></li><li><a href="global.html#changeMenuPrice">changeMenuPrice</a></li><li><a href="global.html#checkEmployee">checkEmployee</a></li><li><a href="global.html#constructMeal">constructMeal</a></li><li><a href="global.html#deleteInventoryItem">deleteInventoryItem</a></li><li><a href="global.html#deleteMenuItem">deleteMenuItem</a></li><li><a href="global.html#findNextInventoryId">findNextInventoryId</a></li><li><a href="global.html#findNextInventoryOrderId">findNextInventoryOrderId</a></li><li><a href="global.html#findNextMealId">findNextMealId</a></li><li><a href="global.html#findNextMenuId">findNextMenuId</a></li><li><a href="global.html#findNextOrderId">findNextOrderId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getMealTypeInfo">getMealTypeInfo</a></li><li><a href="global.html#getMenuItemName">getMenuItemName</a></li><li><a href="global.html#getMinDate">getMinDate</a></li><li><a href="global.html#getOrder">getOrder</a></li><li><a href="global.html#inventoryOrderSQLStr">inventoryOrderSQLStr</a></li><li><a href="global.html#orderJoinSQLStr1">orderJoinSQLStr1</a></li><li><a href="global.html#orderJoinSQLStr2">orderJoinSQLStr2</a></li><li><a href="global.html#restockAmountSQLStr">restockAmountSQLStr</a></li><li><a href="global.html#salesReport">salesReport</a></li><li><a href="global.html#sellsTogetherData">sellsTogetherData</a></li><li><a href="global.html#sendMeal">sendMeal</a></li><li><a href="global.html#sendOrder">sendOrder</a></li><li><a href="global.html#translate">translate</a></li><li><a href="global.html#updateInventoryItemPrice">updateInventoryItemPrice</a></li><li><a href="global.html#updateInventoryItemQuantity">updateInventoryItemQuantity</a></li><li><a href="global.html#updateMenu">updateMenu</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 20:31:08 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

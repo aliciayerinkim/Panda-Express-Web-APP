@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/EmployeeLogin.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/EmployeeLogin.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, useEffect } from "react";
+import "../components/styles.scss";
+import HomeNav from "../components/HomeNav";
+import { Card, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { checkEmployee } from '../connections/employeeFunctions'
+import { Employee} from "../classes/EmployeeInfo"
+/**
+ * Allows an employee to log in.
+ * @param {Setter} setUser - The setter function for the current user.
+ * @param {Setter} setIsLoggedIn - The setter function for the current login status.
+ * @param {Setter} setIsManager - The setter function for the current manager status.
+ * @author Joseph Quismorio
+ */
+function EmployeeLogin({setUser, setIsLoggedIn, setIsManager}) {
+  const navigate = useNavigate();
+
+  const [username, setUsername] = useState(null);
+  const [password, setPassword] = useState(null);
+
+  const handleChangeUsername = event => {
+    setUsername(event.target.value);
+  };
+
+  const handleChangePassword = event => {
+    setPassword(event.target.value);
+  };
+
+  const onSubmitHandler = () => {
+    async function getEmployee() {
+      // console.log(username);
+      // console.log(password);
+      let data = await checkEmployee(username, password); 
+      //console.log(data[0]);
+      let employeeData = new Employee(data);
+      //console.log(employeeData);
+      if (employeeData.isValid) {
+        setUser(employeeData);
+        setIsLoggedIn(true);
+        if (employeeData.isManager){
+          setIsManager(true);
+        }
+        navigate('/dashboard', { replace: true });
+      }else{
+        alert('Invalid');
+      }
+    }
+    getEmployee();
+  }; 
+
+  return (
+    &lt;div className="login">
+      &lt;HomeNav />
+      &lt;div className="auth-form-container body" style={{paddingTop: '200px'}}>
+        &lt;Card style={{ width: '42vw', boxShadow: "rgb(0 0 0 / 30%) 1px 1px 10px", transition: "all 100s ease-in-out"}}>
+          &lt;div className="auth-form-content">
+              &lt;h3 className="auth-form-title mt-3">EMPLOYEE SIGN IN&lt;/h3>
+              &lt;h5 className="mb-3">Username&lt;/h5>
+              &lt;input size="lg" class="form-control mb-3" onChange={handleChangeUsername} value={username} placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" required>&lt;/input>
+
+              &lt;h5 className="mb-3">Password&lt;/h5>
+              &lt;input type="password" size="lg" class="form-control" onChange={handleChangePassword} value={password} placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" required>&lt;/input>
+              &lt;Button variant="panda-btn" size="md" className="d-grid gap-2 mt-4 mb-4 btn-block" type="submit" style={{ fontWeight: 800 }} onClick={onSubmitHandler}>
+                SUBMIT
+              &lt;/Button>
+          &lt;/div>
+        &lt;/Card>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+
+export default EmployeeLogin;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

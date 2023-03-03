@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/Maps.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/Maps.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, useCallback, useEffect, Component} from "react";
+import { Button, Row, InputGroup, Form, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
+import { GoogleMap, useJsApiLoader, DirectionsService, DirectionsRenderer, Marker, Autocomplete} from '@react-google-maps/api';
+
+/**
+* This file will generate map with choices of transportation and user input address with auto complete functionally to generate routes
+* @author Your Name
+*/
+
+const loc = {
+    lat: 30.612379915919746,
+    lng: -96.34152692140881
+};
+
+/**
+* This class will have functions to check what transportation user has chosen and what origin they have inputed to generate routes from their origin to specific desitination stated in contructor and display the routes on the map generated
+*/
+class Directions extends Component {
+
+  /**
+  * Constructor of Directions. Set default state and bind all functions
+  * @param {} 
+  * @return {}
+  */
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      response: null,
+      travelMode: 'DRIVING',
+      origin: '',
+      destination: 'Memorial Student Center, 275 Joe Routt Blvd, College Station, TX 77840'
+    }
+
+    this.directionsCallback = this.directionsCallback.bind(this)
+    this.checkDriving = this.checkDriving.bind(this)
+    this.checkBicycling = this.checkBicycling.bind(this)
+    this.checkTransit = this.checkTransit.bind(this)
+    this.checkWalking = this.checkWalking.bind(this)
+    this.getOrigin = this.getOrigin.bind(this)
+    this.onClick = this.onClick.bind(this)
+  }
+
+  /**
+  * Gets a parameter with response and sets the current state to states of the parameter given
+  * @param {class} response - Direction class
+  * @return {}
+  */
+  directionsCallback (response) {
+    console.log(response)
+
+    if (response !== null) {
+      if (response.status === 'OK') {
+        this.setState(
+          () => ({
+            response
+          })
+        )
+      } else {
+        console.log('response: ', response)
+      }
+    }
+  }
+
+  /**
+  * When the target is checked. it sets the current travelMode to DRIVING
+  * @param {any} { target: { checked } } - components
+  * @return {} 
+  */
+  checkDriving ({ target: { checked } }) {
+      checked &amp;&amp;
+        this.setState(
+          () => ({
+            travelMode: 'DRIVING'
+          })
+        )
+    }
+  
+  /**
+  * When the target is checked. it sets the current travelMode to BICYCLING
+  * @param {any} { target: { checked } } - components
+  * @return {}
+  */
+  checkBicycling ({ target: { checked } }) {
+    checked &amp;&amp;
+      this.setState(
+        () => ({
+          travelMode: 'BICYCLING'
+        })
+      )
+  }
+  
+  /**
+  * When the target is checked. it sets the current travelMode to TRANSIT
+  * @param {any} { target: { checked } } - components
+  * @return {}
+  */
+  checkTransit ({ target: { checked } }) {
+    checked &amp;&amp;
+      this.setState(
+        () => ({
+          travelMode: 'TRANSIT'
+        })
+      )
+  }
+
+  /**
+  * When the target is checked. it sets the current travelMode to WALKING
+  * @param {any} { target: { checked } } - components
+  * @return {}
+  */
+  checkWalking ({ target: { checked } }) {
+    checked &amp;&amp;
+      this.setState(
+        () => ({
+          travelMode: 'WALKING'
+        })
+      )
+  }
+
+  /**
+  * Sets current origin to the new origin given through parameter without using setState
+  * @param {string} ref - new origin to set
+  * @return {}
+  */
+  getOrigin (ref) {
+    this.origin = ref
+  }
+
+  /**
+  * IF the value of current origin is not null, it sets the current origin to the current value of origin
+  * @param {}
+  * @return {}
+  */
+  onClick () {
+    if (this.origin.value !== '' ) {
+      this.setState(
+        () => ({
+          origin: this.origin.value
+        })
+      )
+    }
+  }
+
+  /**
+  * Generate a map that can display routes with user input address and user selection on travelmode
+  * @param {}
+  * @return {} - user input box with selection of travelmode and a map that can display routes
+  */
+  render () {
+    return (
+      &lt;div className='map'>
+        &lt;div className='map-settings'>
+          { window.location.pathname === "/order/order-confirmation" ? &lt;div>&lt;/div> :
+          
+          &lt;Row className='d-inline-flex'>
+          &lt;InputGroup className="mb-3 px-3">
+            &lt;Autocomplete>
+              &lt;Form.Control
+              id='ORIGIN'
+              placeholder="Address"
+              aria-label="Address"
+              aria-describedby="basic-addon2"
+              ref={this.getOrigin}
+              required
+              style={{width: '35vmin'}}
+              />
+              &lt;/Autocomplete>
+              &lt;Button variant="panda-btn" style={{fontWeight: '600'}} onClick={this.onClick}>
+              GET DIRECTIONS
+              &lt;/Button>
+          &lt;/InputGroup>
+          &lt;/Row>
+          }
+          &lt;div className='travel-mode d-inline-flex'>
+          { window.location.pathname === "/order/order-confirmation" ? &lt;div>&lt;/div> :
+          &lt;Row>
+            &lt;div className='d-flex flex-wrap'>
+              &lt;div className='form-group custom-control custom-radio mr-4'>
+                &lt;input
+                  id='DRIVING'
+                  className='custom-control-input'
+                  name='travelMode'
+                  type='radio'
+                  checked={this.state.travelMode === 'DRIVING'}
+                  onChange={this.checkDriving}
+                />
+                &lt;label className='custom-control-label' htmlFor='DRIVING'>Driving&lt;/label>
+              &lt;/div>
+
+              &lt;div className='form-group custom-control custom-radio mr-4'>
+                &lt;input
+                  id='BICYCLING'
+                  className='custom-control-input'
+                  name='travelMode'
+                  type='radio'
+                  checked={this.state.travelMode === 'BICYCLING'}
+                  onChange={this.checkBicycling}
+                />
+                &lt;label className='custom-control-label' htmlFor='BICYCLING'>Bicycling&lt;/label>
+              &lt;/div>
+
+              &lt;div className='form-group custom-control custom-radio mr-4'>
+                &lt;input
+                  id='TRANSIT'
+                  className='custom-control-input'
+                  name='travelMode'
+                  type='radio'
+                  checked={this.state.travelMode === 'TRANSIT'}
+                  onChange={this.checkTransit}
+                />
+                &lt;label className='custom-control-label' htmlFor='TRANSIT'>Transit&lt;/label>
+              &lt;/div>
+
+              &lt;div className='form-group custom-control custom-radio mr-4'>
+                &lt;input
+                  id='WALKING'
+                  className='custom-control-input'
+                  name='travelMode'
+                  type='radio'
+                  checked={this.state.travelMode === 'WALKING'}
+                  onChange={this.checkWalking}
+                />
+                &lt;label className='custom-control-label' htmlFor='WALKING'>Walking&lt;/label>
+              &lt;/div>
+            &lt;/div>
+          &lt;/Row> }
+        &lt;/div>
+        &lt;/div>
+
+        &lt;div className='map-container'>
+          
+          &lt;GoogleMap
+            mapContainerStyle={{
+              height: '30vh',
+              width: '100%'
+            }}
+            zoom={14}
+            center={loc}
+          >
+            {
+              this.state.origin !== '' &amp;&amp; (
+                &lt;DirectionsService
+                  options={{ 
+                    destination: this.state.destination,
+                    origin: this.state.origin,
+                    travelMode: this.state.travelMode
+                  }}
+                  callback={this.directionsCallback}
+                />
+              )
+            }
+
+            {
+              this.state.response !== null &amp;&amp; (
+                &lt;DirectionsRenderer
+                  options={{  
+                    directions: this.state.response
+                  }}
+                />
+              )
+            }
+          &lt;Marker position={loc}/>
+          &lt;/GoogleMap>
+        &lt;/div>
+      &lt;/div>
+    )
+  }
+}
+
+/**
+* Description
+* @param {}
+* @return {class} - if map can be loaded properly it will run the Direction class and return the class
+*/
+function Maps(){
+  const {isLoaded} = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey:"AIzaSyAtO-aoWncgkDfaLDoI2EhIJHjRlrUNhuM",
+    libraries:['places']
+  })
+
+  return isLoaded ? (
+    &lt;div>
+      &lt;Directions />
+    &lt;/div>
+    
+    ) : &lt;div>&lt;/div>
+  }
+  export default Maps;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

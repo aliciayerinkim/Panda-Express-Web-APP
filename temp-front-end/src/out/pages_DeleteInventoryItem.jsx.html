@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/DeleteInventoryItem.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/DeleteInventoryItem.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, {useState, useEffect} from 'react';
+import '../components/styles.scss';
+import '../components/livealert.js';
+import ManagerNav from "../components/ManagerNav";
+import Footer from "../components/Footer";
+import { Button } from 'react-bootstrap';
+import { getInventory } from '../connections/inventoryFunctions'
+import { Inventory } from '../classes/Inventory'
+
+/**
+ * Deletes an item from the inventory.
+ * @author Molly Frost
+ */
+const DeleteInventoryItem = () => {
+
+    const [inventory, setInventory] = useState(new Inventory())
+
+    useEffect(() => {
+      async function getInv() {
+        let data = await getInventory();
+        var inv = new Inventory(data);
+        setInventory(inv);
+      }
+      getInv();
+    }, []);
+  
+    function checkSubmition() {
+      const inventoryItem = document.getElementById('inputGroupSelect01');
+      if (inventoryItem.value === '-1'){
+        alert("ERROR: Please select an inventory item.");
+      }else{
+        const success = true;
+        //Boolean success = deleteInventoryItem(inventoryItem.value)
+        if(success){
+          inventory.deleteFromInventory(inventoryItem.value);
+          alert("SUCCESS: Inventory item was successfully deleted!");
+        }else{
+          alert("ERROR: An error has occured. Please try again");
+        }
+      }
+    }
+
+    return (
+        &lt;div className="edit_menu_price">
+          &lt;ManagerNav />
+          &lt;div class="container">
+            &lt;div class="container overflow-hidden text-center">
+              &lt;h1 class="mb-3" style={{fontWeight: 800}}>Delete Inventory Item&lt;/h1>
+            &lt;/div>
+            &lt;div class="row align-items-center justify-content-center my-5 text-center">
+              &lt;div class="col-lg-4 text-center">
+              &lt;div class="input-group mb-3">
+                  &lt;label class="input-group-text text-white" style={{backgroundColor: '#D02B2E', fontWeight: 800, color: '#D02B2E'}} for="inputGroupSelect01">Select Inventory Item&lt;/label>
+                  &lt;select class="form-select" id="inputGroupSelect01">
+                    &lt;option value="-1" selected>Choose...&lt;/option>
+                    { 
+                      inventory.getItems.map((item) => (
+                        &lt;option value={`${item.getInventoryName}`}>{item.getInventoryName}&lt;/option>
+                      ))
+                    }
+                  &lt;/select>
+                &lt;/div>
+              &lt;/div>
+            &lt;div class="col-lg-4 text-center">
+                &lt;div id="liveAlertPlaceholder">&lt;/div>
+                &lt;Button variant="panda-btn mt-3" onClick={checkSubmition} size="medium" class="bg-red text-white btn" style={{fontWeight: 800}}>DELETE&lt;/Button>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>  
+          &lt;Footer />
+        &lt;/div>
+      );
+}
+
+export default DeleteInventoryItem; </code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

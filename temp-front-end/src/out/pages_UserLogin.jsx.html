@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/UserLogin.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/UserLogin.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, useEffect } from "react";
+import "../components/styles.scss";
+import HomeNav from "../components/HomeNav";
+import jwt_decode from "jwt-decode";
+import { Form, Button, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
+/**
+ * Allows a customer to log in using Google OAuth.
+ * @param {Object} user - The current user.
+ * @param {Setter} setUser - The setter function for the current user.
+ * @param {Setter} setIsLoggedIn - The setter function for the current login status.
+ * @author Joseph Quismorio
+ */
+function UserLogin({ user, setUser, setIsLoggedIn }) {
+  let [authMode, setAuthMode] = useState("signin")
+
+  const navigate = useNavigate();
+
+  const onSubmitHandler = (e) => {
+    e.preventDefault();
+    navigate("/", { replace: true });
+  };
+
+  const changeAuthMode = () => {
+    setAuthMode(authMode === "signin" ? "signup" : "signin")
+  }
+
+  function handleCallbackResponse(response) {
+    var userObject = jwt_decode(response.credential);
+    setUser(userObject);
+    setIsLoggedIn(true);
+  }
+
+  function handleSignout(event) {
+    setUser({});
+    setIsLoggedIn(false);
+  }
+
+  useEffect(() => {
+      /* global google */
+      google.accounts.id.initialize({
+          client_id: "872426610376-8n6s963sqst5hvdm59tea156t78e5frm.apps.googleusercontent.com",
+          callback: handleCallbackResponse
+      });
+
+      google.accounts.id.renderButton(
+          document.getElementById("signInDiv"),
+          { theme: 'outline', size: 'large'}
+      )
+  });
+
+  if (authMode === "signin") {
+    return (
+      &lt;div className="auth-form-container" style={{paddingTop: '200px'}}>
+        &lt;script src="https://accounts.google.com/gsi/client" async defer>&lt;/script>
+        &lt;HomeNav />
+        &lt;Form className="auth-form">
+          &lt;div className="auth-form-content">
+            &lt;div className="text-center mb-4">
+              {
+                Object.keys(user).length !== 0 ? 
+                &lt;div>
+                  &lt;h3 className="auth-form-title" style={{textTransform: 'uppercase'}}>WELCOME!&lt;/h3>
+                  &lt;Row className="mb-2">
+                    &lt;Col>
+                      &lt;img src={user.picture} style={{borderRadius: '50%'}}/>
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;h5 style={{fontWeight: '600'}}>{user.name}&lt;/h5>
+                      &lt;h6>{user.email}&lt;/h6>                            
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Row className="d-block">
+                    &lt;Col>
+                      &lt;Button variant='panda-btn' className='mt-3' style={{fontWeight: '600'}} onClick={() => navigate('/order')}>CREATE ORDER&lt;/Button>
+                    &lt;/Col>
+                    {localStorage.getItem('orderInProgress') === '[]' ? 
+                    &lt;div>&lt;/div>
+                    : 
+                    &lt;Col>
+                      &lt;Button variant='panda-btn' className='mt-3' style={{fontWeight: '600'}} onClick={() => navigate('/order/order-confirmation')}>CURRENT ORDER&lt;/Button>
+                    &lt;/Col>}
+                    &lt;Col>
+                      &lt;Button variant='panda-btn' className='mt-3' style={{fontWeight: '600'}} onClick={(event) => handleSignout(event)}>SIGN OUT&lt;/Button>       
+                    &lt;/Col>
+                  &lt;/Row>
+                &lt;/div> : 
+                &lt;div>
+                  &lt;h3 className="auth-form-title">SIGN IN&lt;/h3>
+                  &lt;div id='signInDiv'>&lt;/div> 
+                  &lt;p className="text-center mt-2" style={{fontSize: '12px'}}>
+                    Employees, log in &lt;a href="/login-employee">here&lt;/a>
+                  &lt;/p>
+                &lt;/div>
+              }
+            &lt;/div>
+          &lt;/div>
+        &lt;/Form>
+      &lt;/div>
+    )
+  }
+
+  return (
+    &lt;div className="auth-form-container" style={{paddingTop: '200px'}}>
+      &lt;HomeNav />
+      &lt;Form className="auth-form" onSubmit={onSubmitHandler}>
+        &lt;div className="auth-form-content">
+          &lt;h3 className="auth-form-title">SIGN UP&lt;/h3>
+          &lt;div className="text-center">
+            Already registered?{" "}
+            &lt;span className="link-primary" onClick={changeAuthMode}>
+              Sign In
+            &lt;/span>
+          &lt;/div>
+          &lt;div className="form-group mt-3">
+            &lt;label>Full Name&lt;/label>
+            &lt;input
+              className="form-control mt-1"
+              placeholder="e.g Jane Doe"
+              required
+            />
+          &lt;/div>
+          &lt;div className="form-group mt-3">
+            &lt;label>Email address&lt;/label>
+            &lt;input
+              type="email"
+              className="form-control mt-1"
+              placeholder="Email Address"
+              required
+            />
+          &lt;/div>
+          &lt;div className="form-group mt-3">
+            &lt;label>Password&lt;/label>
+            &lt;input
+              type="password"
+              className="form-control mt-1"
+              placeholder="Password"
+              required
+            />
+          &lt;/div>
+          &lt;div className="d-grid gap-2 mt-3">
+            &lt;Button variant="panda-btn" size="md" className="d-grid gap-2 mt-4 mb-3 btn-block" type="submit" style={{ fontWeight: 800 }}>
+             SIGN IN
+            &lt;/Button>
+            &lt;div id="signInDiv">&lt;/div>
+          &lt;/div>
+        &lt;/div>
+      &lt;/Form>
+    &lt;/div>
+  )
+}
+
+export default UserLogin;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

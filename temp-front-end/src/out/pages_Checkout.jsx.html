@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/Checkout.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/Checkout.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//import React from 'react';
+import React, {useState, useEffect} from 'react';
+import '../components/styles.scss';
+import { useNavigate } from "react-router-dom";
+import HomeNav from "../components/HomeNav";
+import EmployeeNav from '../components/EmployeeNav';
+import { Col, Row, Button, Card, Container, ToggleButtonGroup, ToggleButton, ButtonGroup } from 'react-bootstrap';
+import { Order } from '../classes/Order';
+import { findNextOrderId, sendOrder} from "../connections/orderFunctions";
+import { Meal } from '../classes/Meal'
+import Maps from '../components/Maps'
+//import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+
+/**
+ * Allows a non-employee user to check out an order.
+ * @param {Array} cart - The current cart.
+ * @param {Setter} setCart - The setter function for the current cart.
+ * @param {Setter} setOrderInProgress - The setter function for the current order in progress.
+ * @author Joseph Quismorio
+ */
+function Checkout({ cart, setCart, orderInProgress, setOrderInProgress }){
+    const [width, setWidth] = useState(window.innerWidth);
+    const [orderId, setOrderId] = useState(0);
+    const [delivery, setDelivery] = useState(false);
+    const breakpoint = 1200;
+
+    useEffect(() => {
+      window.addEventListener("resize", () => setWidth(window.innerWidth));
+    }, []);
+
+    useEffect(() => {
+      async function getOrderId() {
+        // console.log(username);
+        // console.log(password);
+        let data = await findNextOrderId(); 
+        setOrderId(data);
+        //console.log(employeeData);
+      }
+      getOrderId();
+    }, []);
+
+    console.log(orderId);
+
+    let preTaxPrice = 0;
+
+    for (let i = 0; i &lt; cart.length; i++){
+      preTaxPrice += cart[i].price;
+    }
+
+    let tax = preTaxPrice * 0.0825;
+    let totalPrice = preTaxPrice + tax;
+
+    const removeFromCart = (productToRemove) => {
+      setCart(cart.filter((product) => product !== productToRemove));
+    };
+
+    const navigate = useNavigate();
+
+    /**
+     * Creates an order from the current contents
+     * of the cart, and sends it to the database.
+     */
+    const orderSend = () => {
+      let meals = [];
+      let addOns = [];
+
+      for (let i = 0; i &lt; cart.length; i++){
+        if(cart[i].itemId === 0){
+          let j = cart[i].noItems;
+          for(let k = 0; k &lt; j; k++){
+            let meal = new Meal(cart[i].sideId, cart[i].entreesId, cart[i].mealId);
+            meals.push(meal);
+          }
+        }else if(cart[i].itemId > 0){
+          let j = cart[i].noItems;
+          for(let k = 0; k &lt; j; k++){
+            addOns.push(cart[i].itemId);
+          }
+        }
+      }
+      let currOrder = new Order(meals, addOns, totalPrice.toFixed(2), 1);
+      //console.log(currOrder);
+      sendOrder(currOrder);
+      setOrderInProgress([]);
+      setOrderInProgress([cart, totalPrice, orderId]);
+      setCart([]);
+      navigate("/order/order-confirmation");
+    };
+  
+    return (
+      width > breakpoint ?
+        (&lt;div>
+          {window.location.pathname === '/dashboard/checkout' ? &lt;EmployeeNav/> : &lt;HomeNav />}
+            &lt;Container className="container" style={{marginTop: '18vh', marginBottom: '6vh'}}>
+              &lt;Row className="justify-content-between">
+                &lt;Col>
+                  &lt;Button variant="panda-btn" size="md" className="bg-red text-white mb-4" href='/order/' style={{fontWeight: 800}}>ADD MORE ITEMS&lt;/Button>
+                  &lt;h3 className="mb-4" style={{fontWeight: 600}}>YOUR ORDER&lt;/h3>
+                  {(cart.length === 0)? &lt;h6>Add some items to your order.&lt;/h6> :
+                    cart.map((item) => (
+                      &lt;Card key={item.name} style={{ width: '42vw', boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}} className="card mr-4 mb-4">
+                        &lt;Row className="p-4">
+                          &lt;Col>
+                              &lt;img src={require(`../images/${item.name}.png`)} alt="" className="img-fluid"/>
+                            &lt;/Col>
+                            &lt;Col>
+                              &lt;h6 style={{fontWeight: '600'}}>{item.name} x{item.noItems}&lt;/h6>
+                              &lt;p style={{ fontSize: '12px', fontWeight: '400'}}>{item.entrees.length === 0 ? `${item.addOnItem}` : `${item.side}, ${item.entrees}`}&lt;/p>
+                              &lt;p style={{ fontSize: '16px', fontWeight: '600'}}>${item.price.toFixed(2)}&lt;/p>
+                              {item.addOnItem === 'Fountain Drink' &amp;&amp; delivery === true ? 
+                              &lt;select class="form-select" id="inputGroupSelect01">
+                                  &lt;option value={'0'}>Pepsi&lt;/option>
+                                  &lt;option value={'1'}>Diet Pepsi&lt;/option>
+                                  &lt;option value={'2'}>Dr. Pepper&lt;/option>
+                                  &lt;option value={'3'}>Diet Dr. Pepper&lt;/option>
+                                  &lt;option value={'4'}>Sierra Mist&lt;/option>
+                                  &lt;option value={'5'}>Mtn Dew&lt;/option>
+                                  &lt;option value={'6'}>Root Beer&lt;/option>
+                                  &lt;option value={'7'}>Water&lt;/option>
+                                &lt;/select>
+                              :
+                              &lt;div>&lt;/div>}
+                            &lt;/Col>
+                            &lt;Col className="text-right my-auto">
+                            &lt;Button variant="panda-btn" size="sm" className="bg-red text-white mb-2" id="bowl" onClick={() => removeFromCart(item)} style={{fontWeight: 800}}>REMOVE ITEM&lt;/Button>
+                            &lt;/Col>
+                        &lt;/Row>
+                      &lt;/Card>
+                    ))
+                  }
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Card style={{boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}}>
+                    &lt;Card.Header style={{ height: '3rem'}}>
+                        &lt;Card.Title className="mt-1 text-center" style={{ fontWeight: '800'}}>CHECKOUT&lt;/Card.Title>
+                    &lt;/Card.Header>
+                    &lt;Card.Body className="text-center">
+                      &lt;Row>
+                          &lt;ToggleButtonGroup type="radio" name="options" exclusive defaultValue={1} className='mb-2'>
+                              &lt;ToggleButton onClick={() => setDelivery(false)} id="tbg-radio-1" value={1} variant="panda-btn" style={{ fontWeight: '800'}}>
+                              PICKUP
+                              &lt;/ToggleButton>
+                              &lt;ToggleButton onClick={() => setDelivery(true)} id="tbg-radio-2" value={2} variant="panda-btn" style={{ fontWeight: '800'}}>
+                              DELIVERY
+                              &lt;/ToggleButton>
+                          &lt;/ToggleButtonGroup>
+                      &lt;/Row>
+                      &lt;Row className='justify-content-center mb-4'>
+                        &lt;Maps/>
+                      &lt;/Row>
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h6>Subtotal&lt;/h6>
+                          &lt;h6>${preTaxPrice.toFixed(2)}&lt;/h6>
+                        &lt;/div>
+                      &lt;/Row>
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h6>Estimated Tax&lt;/h6>
+                          &lt;h6>${tax.toFixed(2)}&lt;/h6>
+                        &lt;/div>
+                      &lt;/Row>
+                      &lt;hr
+                      className='my-2'
+                        style={{
+                          backgroundColor: '#CCCBCB'
+                        }}
+                      />
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h5 style={{ fontWeight: '800'}}>Total&lt;/h5>
+                          &lt;h5 style={{ fontWeight: '800'}}>${totalPrice.toFixed(2)}&lt;/h5>
+                        &lt;/div>
+                      &lt;/Row>
+                    &lt;/Card.Body>
+                    &lt;Card.Footer style={{height: '5rem'}}>
+                      &lt;Button disabled={totalPrice === 0} variant="panda-btn" size="lg" className="my-2 bg-red btn-block text-white" id="bowl" onClick={() => orderSend()} style={{fontWeight: 800}}>ORDER NOW&lt;/Button>
+                    &lt;/Card.Footer>
+                  &lt;/Card>
+                &lt;/Col>
+              &lt;/Row>
+            &lt;/Container>
+        &lt;/div>) : 
+        (&lt;div>
+          {window.location.pathname === '/dashboard/checkout' ? &lt;EmployeeNav/> : &lt;HomeNav />}
+            &lt;Container className="container" style={{marginTop: '18vh', marginBottom: '6vh'}}>
+                &lt;Col>
+                  &lt;Button variant="panda-btn" size="md" className="bg-red text-white mb-4" href='/order/' style={{fontWeight: 800}}>ADD MORE ITEMS&lt;/Button>
+                  &lt;h3 className="mb-4" style={{fontWeight: 600}}>YOUR ORDER&lt;/h3>
+                  {(cart.length === 0)? &lt;h6>Add some items to your order.&lt;/h6> :
+                    cart.map((item) => (
+                      &lt;Card key={item.name} style={{boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}} className="card mb-4">
+                        &lt;Row className="p-4">
+                          &lt;Col>
+                              &lt;img src={require(`../images/${item.name}.png`)} alt="" className="img-fluid"/>
+                            &lt;/Col>
+                            &lt;Col>
+                              &lt;h6 style={{fontWeight: '600'}}>{item.name} x{item.noItems}&lt;/h6>
+                              &lt;p style={{ fontSize: '12px', fontWeight: '400'}}>{item.entrees.length === 0 ? `${item.addOnItem}` : `${item.side}, ${item.entrees}`}&lt;/p>
+                              &lt;p style={{ fontSize: '16px', fontWeight: '600'}}>${item.price.toFixed(2)}&lt;/p>
+                              {item.addOnItem === 'Fountain Drink' &amp;&amp; delivery === true ? 
+                              &lt;select class="form-select" id="inputGroupSelect01">
+                                  &lt;option value={'0'}>Pepsi&lt;/option>
+                                  &lt;option value={'1'}>Diet Pepsi&lt;/option>
+                                  &lt;option value={'2'}>Dr. Pepper&lt;/option>
+                                  &lt;option value={'3'}>Diet Dr. Pepper&lt;/option>
+                                  &lt;option value={'4'}>Sierra Mist&lt;/option>
+                                  &lt;option value={'5'}>Mtn Dew&lt;/option>
+                                  &lt;option value={'6'}>Root Beer&lt;/option>
+                                  &lt;option value={'7'}>Water&lt;/option>
+                                &lt;/select>
+                              :
+                              &lt;div>&lt;/div>}
+                            &lt;/Col>
+                            &lt;Col className="text-right">
+                            &lt;Button variant="panda-btn" size="sm" className="bg-red text-white" id="bowl" onClick={() => removeFromCart(item)} style={{fontWeight: 800}}>REMOVE ITEM&lt;/Button>
+                            &lt;/Col>
+                        &lt;/Row>
+                      &lt;/Card>
+                    ))
+                  }
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Card style={{ boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}}>
+                    &lt;Card.Header style={{ height: '3rem'}}>
+                        &lt;Card.Title className="mt-1 text-center" style={{ fontWeight: '800'}}>CHECKOUT&lt;/Card.Title>
+                    &lt;/Card.Header>
+                    &lt;Card.Body className="text-center">
+                      &lt;Row>
+                          &lt;ToggleButtonGroup type="radio" name="options" exclusive defaultValue={1} className='mb-2'>
+                              &lt;ToggleButton onClick={() => setDelivery(false)} id="tbg-radio-1" value={1} variant="panda-btn" style={{ fontWeight: '800'}}>
+                              PICKUP
+                              &lt;/ToggleButton>
+                              &lt;ToggleButton onClick={() => setDelivery(true)} id="tbg-radio-2" value={2} variant="panda-btn" style={{ fontWeight: '800'}}>
+                              DELIVERY
+                              &lt;/ToggleButton>
+                          &lt;/ToggleButtonGroup>
+                      &lt;/Row>
+                      &lt;Row className='justify-content-center mb-4'>
+                        &lt;Maps/>
+                      &lt;/Row>
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h6>Subtotal&lt;/h6>
+                          &lt;h6>${preTaxPrice.toFixed(2)}&lt;/h6>
+                        &lt;/div>
+                      &lt;/Row>
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h6>Estimated Tax&lt;/h6>
+                          &lt;h6>${tax.toFixed(2)}&lt;/h6>
+                        &lt;/div>
+                      &lt;/Row>
+                      &lt;hr
+                      className='my-2'
+                        style={{
+                          backgroundColor: '#CCCBCB'
+                        }}
+                      />
+                      &lt;Row>
+                        &lt;div className="d-flex justify-content-between align-self-center">
+                          &lt;h5 style={{ fontWeight: '800'}}>Total&lt;/h5>
+                          &lt;h5 style={{ fontWeight: '800'}}>${totalPrice.toFixed(2)}&lt;/h5>
+                        &lt;/div>
+                      &lt;/Row>
+                    &lt;/Card.Body>
+                    &lt;Card.Footer style={{height: '5rem'}}>
+                      &lt;Button disabled={totalPrice === 0} variant="panda-btn" size="lg" className="my-2 bg-red btn-block text-white" id="bowl" onClick={() => orderSend()} style={{fontWeight: 800}}>ORDER NOW&lt;/Button>
+                    &lt;/Card.Footer>
+                  &lt;/Card>
+                &lt;/Col>
+            &lt;/Container>
+        &lt;/div>)
+      );
+}
+export default Checkout;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

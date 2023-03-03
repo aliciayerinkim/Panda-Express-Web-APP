@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/ExcessReport.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/ExcessReport.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { getMinDate, inventoryOrderSQLStr, orderJoinSQLStr1, orderJoinSQLStr2, restockAmountSQLStr } from '../connections/ReportFunctions'
+import { getInventory } from '../connections/inventoryFunctions'
+
+/*
+HOW TO CALL AND CREATE THE EXCESS REPORT:
+  const [excessReport, setExcessReport] = useState(new ExcessReport())
+  useEffect(() => {
+    async function generateER() {
+        let report = new ExcessReport()
+        async report.excessReport(startTime, endTime)
+        setExcessReport(report)
+    }
+    generateER();
+  }, []);
+*/
+
+/**
+ * This class, ExcessReportItem, holds all the information each ExcessReportItem can hold
+ * It also has constructor to create new ExcessReportItem item and get and set functions to get the informations and modify information locally
+ * 
+ * @author Justin Van Nimwegen - 930005547 - Project 3
+ *
+ */
+class ExcessReportItem {
+    private
+        itemName = "";
+        percentage = 0.0;
+    /**
+     * Constructor to create a ExcessReportItem Object
+     * @param {String} itemName - Item name
+     * @param {Number} percentage - percentage product bought
+     * @return {ExcessReportItem} a constructed local ExcessReportItem
+     */
+    constructor(itemName, percentage) {
+        this.itemName = itemName;
+        this.percentage = percentage;
+    }
+
+    /**
+     * Getter for itemName
+     * @return {String} itemName
+     */
+    get getItemName() {
+        return this.itemName
+    }
+
+    /**
+     * Getter for percentage
+     * @return {Number} percentage
+     */
+    get getPercentage() {
+        return this.percentage
+    }
+
+}
+
+/**
+ * This class, ExcessReport, holds all the information each ExcessReport can hold
+ * It also has constructor to create new ExcessReport item and get and set functions to get the informations and modify information locally
+ * 
+ * @author Justin Van Nimwegen - 930005547 - Project 3
+ *
+ */
+class ExcessReport {
+    private
+        itemsMap = [];
+    /**
+     * Constructor to create a ExcessReport Object
+     * @return {ExcessReport} a constructed local ExcessReport
+     */
+    constructor() { //startTime, endTime) {
+        this.itemsMap = [];
+        //this.excessReport(startTime, endTime);
+    }
+
+    /**
+     * Getter for itemsMap
+     * @return {Array} itemsMap
+     */
+    get getItems() {
+        return this.itemsMap
+    }  
+
+    /**
+     * Method to get the quantity of an inventory item at a given time
+     * @param {Number} inventoryItemId - Item name
+     * @param {String} trargetDate - time
+     * @return {Number} quantity of an inventory item at a given time
+     */
+    async getInventoryQuantityAtTime(inventoryItemId, trargetDate) {
+        let getMinDateData = await getMinDate();
+        let miniDate = (getMinDateData[0].time_stamp).substring(0,10)
+
+        // if targetdate is before the first date of the interval
+        if (getMinDateData[0].time_stamp.localeCompare(trargetDate)  > 0) {
+            trargetDate = miniDate
+        }
+
+        let startDate = "2022-09-04"
+        let startQuantity = 0
+        let inventoryOrderSQLStrData = await inventoryOrderSQLStr(trargetDate)
+        // console.log("z: ", inventoryOrderSQLStrData)
+        if (inventoryOrderSQLStrData.length > 0) {
+            startQuantity = inventoryOrderSQLStrData[0].quantity_snapshot
+            startDate = (inventoryOrderSQLStrData[0].time_stamp).substring(0,10)
+        }
+
+        let orderQuantity_Order_and_Order_addon_BRIDGE = -1
+        let orderJoinSQLStr1Data = await orderJoinSQLStr1(inventoryItemId, startDate, trargetDate)
+        orderQuantity_Order_and_Order_addon_BRIDGE = orderJoinSQLStr1Data[0].quantity
+        //console.log("z1: ", orderQuantity_Order_and_Order_addon_BRIDGE)
+
+        let orderQuantity_Order_and_Meal_and_Meal_items_BRIDGE = -1
+        let orderJoinSQLStr2Data = await orderJoinSQLStr2(inventoryItemId, startDate, trargetDate)
+        orderQuantity_Order_and_Meal_and_Meal_items_BRIDGE = orderJoinSQLStr2Data[0].quantity
+        //console.log("z2: ", orderQuantity_Order_and_Meal_and_Meal_items_BRIDGE)
+        //console.log("start: ", startQuantity)
+        //console.log("return: ", startQuantity - orderQuantity_Order_and_Order_addon_BRIDGE - orderQuantity_Order_and_Meal_and_Meal_items_BRIDGE)
+        return startQuantity - orderQuantity_Order_and_Order_addon_BRIDGE - orderQuantity_Order_and_Meal_and_Meal_items_BRIDGE;
+
+    }
+
+    /**
+     * Method to get the restock amount over a time period
+     * @param {Number} inventoryItemId - Item id
+     * @param {String} begin - time
+     * @param {String} end - time
+     * @return {Number} restock amount over given time
+     */
+    async getRestockAmount(inventoryItemId, begin, end) {
+        let restockAmountSQLStrData = await restockAmountSQLStr(inventoryItemId, begin, end);
+        let restockAmount = restockAmountSQLStrData[0].sum
+        //console.log("restock amount", restockAmount)
+        return restockAmount
+    }
+
+    /**
+     * Method to get the amount sold over a time period
+     * @param {Number} inventoryItemId - Item id
+     * @param {String} begin - time
+     * @param {String} end - time
+     * @return {Number} amount sold over given time
+     */
+    async getAmountSold(inventoryItemId, begin, end) {
+        let quantityBefore = await this.getInventoryQuantityAtTime(inventoryItemId, begin);
+        let quantityAfter = await this.getInventoryQuantityAtTime(inventoryItemId, end);
+        let restockAmount = await this.getRestockAmount(inventoryItemId, begin, end);
+        //console.log("quan before: ", quantityBefore, " quan after: ", quantityAfter, " restock amount: ", restockAmount)
+        let numSales = quantityBefore - (quantityAfter + restockAmount);
+        return numSales;
+    }   
+
+    /**
+     * Method generate and update the excess report (itemsMap)
+     * @param {String} startTime - time
+     * @param {String} endTime - time
+     */
+    async excessReport(startTime, endTime) {
+        //console.log("A")
+        let inventoryData = await getInventory();
+        //console.log("B: ", inventoryData)
+        let ingredientIdName = new Map();
+        for(let i = 0; i &lt; inventoryData.length; i++) {
+            ingredientIdName.set(inventoryData[i].inventory_id, inventoryData[i].inventory_name)
+        }
+
+        //console.log("C: ", ingredientIdName)
+        ingredientIdName.forEach (async function(value, key){
+            //console.log("C1")
+            let startInventory = await this.getInventoryQuantityAtTime(key, startTime);
+            //console.log("C2: ", startInventory)
+            let amtSold = await this.getAmountSold(key, startTime, endTime); 
+           // console.log("C3: ", amtSold)
+            let percentSold = amtSold/startInventory; 
+            //console.log("C4: ", percentSold)
+            if (percentSold &lt;= .10) {
+                //console.log("NEW ELE")
+                let newEPI = new ExcessReportItem(value, percentSold)
+                this.itemsMap.push(newEPI);
+            }
+        }.bind(this));
+    }    
+}
+
+export { ExcessReport, ExcessReportItem } 
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Employee.html">Employee</a></li><li><a href="ExcessReport.html">ExcessReport</a></li><li><a href="ExcessReportItem.html">ExcessReportItem</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li><li><a href="Meal.html">Meal</a></li><li><a href="MealPrice.html">MealPrice</a></li><li><a href="MealType.html">MealType</a></li><li><a href="Menu.html">Menu</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="global.html#Order">Order</a></li><li><a href="Pair.html">Pair</a></li><li><a href="PairCollection.html">PairCollection</a></li><li><a href="RestockReport.html">RestockReport</a></li><li><a href="RestockReportItem.html">RestockReportItem</a></li><li><a href="SalesReport.html">SalesReport</a></li><li><a href="SalesReportItem.html">SalesReportItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#addInventoryItem">addInventoryItem</a></li><li><a href="global.html#addInventoryOrder">addInventoryOrder</a></li><li><a href="global.html#addMenuItem">addMenuItem</a></li><li><a href="global.html#changeMealPrice">changeMealPrice</a></li><li><a href="global.html#changeMenuPrice">changeMenuPrice</a></li><li><a href="global.html#checkEmployee">checkEmployee</a></li><li><a href="global.html#constructMeal">constructMeal</a></li><li><a href="global.html#deleteInventoryItem">deleteInventoryItem</a></li><li><a href="global.html#deleteMenuItem">deleteMenuItem</a></li><li><a href="global.html#findNextInventoryId">findNextInventoryId</a></li><li><a href="global.html#findNextInventoryOrderId">findNextInventoryOrderId</a></li><li><a href="global.html#findNextMealId">findNextMealId</a></li><li><a href="global.html#findNextMenuId">findNextMenuId</a></li><li><a href="global.html#findNextOrderId">findNextOrderId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getMealTypeInfo">getMealTypeInfo</a></li><li><a href="global.html#getMenuItemName">getMenuItemName</a></li><li><a href="global.html#getMinDate">getMinDate</a></li><li><a href="global.html#getOrder">getOrder</a></li><li><a href="global.html#inventoryOrderSQLStr">inventoryOrderSQLStr</a></li><li><a href="global.html#orderJoinSQLStr1">orderJoinSQLStr1</a></li><li><a href="global.html#orderJoinSQLStr2">orderJoinSQLStr2</a></li><li><a href="global.html#restockAmountSQLStr">restockAmountSQLStr</a></li><li><a href="global.html#salesReport">salesReport</a></li><li><a href="global.html#sellsTogetherData">sellsTogetherData</a></li><li><a href="global.html#sendMeal">sendMeal</a></li><li><a href="global.html#sendOrder">sendOrder</a></li><li><a href="global.html#translate">translate</a></li><li><a href="global.html#updateInventoryItemPrice">updateInventoryItemPrice</a></li><li><a href="global.html#updateInventoryItemQuantity">updateInventoryItemQuantity</a></li><li><a href="global.html#updateMenu">updateMenu</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 20:31:08 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

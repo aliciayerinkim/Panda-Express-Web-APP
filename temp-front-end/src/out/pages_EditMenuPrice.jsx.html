@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/EditMenuPrice.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/EditMenuPrice.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
+import '../components/styles.scss';
+import '../components/livealert.js';
+import ManagerNav from "../components/ManagerNav";
+import Footer from "../components/Footer";
+import { Button } from 'react-bootstrap';
+import { Menu } from "../classes/Menu";
+import { updateMenu } from "../connections/menuFunctions"
+import { useState, useEffect } from 'react';
+
+/**
+ * Allows managers to edit the price of
+ * an item in the menu.
+ * @author Molly Frost, Joseph Quismorio
+ */
+const EditMenuPrice = () => {
+  const [message, setMessage] = useState('');
+
+  const dropDownPlaceholder = document.getElementById('add_to_me')
+
+  const [menu, setMenu] = useState(new Menu())
+  //var menu = new Menu();
+  useEffect(() => {
+    async function getMenu() {
+      let data = await updateMenu();
+      var menuN = new Menu(data);
+      setMenu(menuN);
+    }
+    getMenu();
+  }, []);
+  //console.log(menu)
+  // var items = menu.getItems;
+  // console.log("items: ", menu.getItems)
+
+  // var itemsLen = items.length;
+  //   for (let i = 0; i &lt; itemsLen; i++){
+  //     var curMenuID = items[i].getMenuItemId //get current menu item id
+  //     var curMenuName = items[i].getProductName //get current menu item name
+
+  //     dropDownPlaceholder.innerHTML +=
+  //       "&lt;option value=\"" + curMenuID + "\">" + curMenuName + "&lt;/option>";
+  //   }
+
+  const handleChange = event => {
+    setMessage(event.target.value);
+
+    console.log('value is:', event.target.value);
+  };
+
+  function checkSubmition() {
+    const menuItem = document.getElementById('inputGroupSelect01');
+    //const newPrice = document.getElementById('priceChange');
+    if (menuItem.value &lt;= 0){
+      alert("ERROR: Please select a menu item.");
+    }else if (message === null | isNaN(+message) || Number.parseFloat(message) &lt;= 0){
+      alert("ERROR: Fill out a positive 'New Price Amount': $0.00");
+    }else{
+      const success = true;
+      const price = Number.parseFloat(message).toFixed(2);
+      console.log(menuItem.value)
+      console.log(price)
+      menu.updatePrice(parseInt(menuItem.value), price)
+      if(success){
+        alert("SUCCESS: Menu price successfully changed to $" + price + "!");
+        console.log("Sides: ", menu.getAllSides)
+      }else{
+        alert("ERROR: An error has occured. Please try again");
+      }
+    }
+  }
+
+    return (
+        &lt;div className="edit_menu_price">
+          &lt;ManagerNav />
+          &lt;div class="container">
+            &lt;div class="container overflow-hidden text-center">
+              &lt;h1 class="mb-3" style={{fontWeight: 800}}>Edit Menu Price&lt;/h1>
+            &lt;/div>
+            &lt;div class="row align-items-center justify-content-center my-5 text-center">
+              &lt;div class="col-lg-4 text-center">
+                &lt;div class="input-group mb-3">
+                  &lt;span variant="panda-btn btn-block mt-3" class="bg-red btn text-white" size="lg" id="basic-addon1" style={{backgroundColor: '#D02B2E', fontWeight: 800, color: '#D02B2E'}}>New Price Amount($):&lt;/span>
+                  &lt;input id="priceChange" type="double" onChange={handleChange} value={message} size="lg" class="form-control" placeholder="Enter new price..." aria-label="Enter new price..." aria-describedby="basic-addon1" style={{fontWeight: 800}}>&lt;/input>
+                &lt;/div>
+              &lt;/div>
+              &lt;div class="col-lg-4 text-center">
+              &lt;div class="input-group mb-3">
+                  &lt;label class="input-group-text text-white" style={{backgroundColor: '#D02B2E', fontWeight: 800, color: '#D02B2E'}} for="inputGroupSelect01">Select Menu Item&lt;/label>
+                  &lt;select class="form-select" id="inputGroupSelect01">
+                    &lt;option value="-1" selected>Choose...&lt;/option>
+                    { 
+                      menu.getItems.map((item) => (
+                        &lt;option value={`${item.getMenuItemId}`}>{item.getProductName}&lt;/option>
+                      ))
+                    }
+                  &lt;/select>
+                &lt;/div>
+              &lt;/div>
+            &lt;div class="col-lg-4 text-center">
+                &lt;Button variant="panda-btn mt-3" onClick={checkSubmition} id="liveAlertBtn" size="medium" class="bg-red text-white btn" style={{fontWeight: 800}}>SUBMIT&lt;/Button>
+              &lt;/div>
+            &lt;/div>
+          &lt;/div>  
+          &lt;Footer />
+        &lt;/div>
+      );
+  };
+
+export default EditMenuPrice; 
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

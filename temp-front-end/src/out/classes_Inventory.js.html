@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: classes/Inventory.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: classes/Inventory.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { findNextInventoryId, addInventoryItem, deleteInventoryItem, updateInventoryItemPrice, updateInventoryItemQuantity, addInventoryOrder } from '../connections/inventoryFunctions'
+
+/**
+ * This class, InventoryItem, holds all the information each item in inventory holds
+ * It also has constructor to create new inventory item and get and set functions to get the informations and modify information locally
+ * 
+ * @author Alicia Kim - 131003034 315 - Project 3
+ *
+ */
+class InventoryItem {
+    private
+        inventoryId = -1;
+        inventoryName = ""
+        itemType = -1
+        unitPrice = -1
+        quantity = 0;
+
+    /**
+     * InventoryItem constructor to make a new inventory item locally
+     * 
+     * @param _inventoryID the inventory item id
+     * @param _inventoryName the inventory item name
+     * @param _itemType the inventory item category
+     * @param _unitPrice the inventory item unit price
+     * @param _quantity the inventory item quantity
+     * @return {InventoryItem} a constructed local InventoryItem
+     */
+    constructor(_inventoryID, _inventoryName, _itemType, _unitPrice, _quantity) {
+        this.inventoryId = _inventoryID
+        this.inventoryName = _inventoryName
+        this.itemType = _itemType
+        this.unitPrice = _unitPrice
+        this.quantity = _quantity;
+    }
+
+    /**
+     * This gets the inventory item id
+     * 
+     * @return {inventoryId} inventory item id
+     */
+    get getInventoryID() {
+        return this.inventoryId
+    }
+
+    /**
+     * This gets the inventory item name
+     * 
+     * @return {inventoryName} inventory item name
+     */
+    get getInventoryName() {
+        return this.inventoryName
+    }
+
+    /**
+     * This gets the inventory item type
+     * 
+     * @return {itemType} inventory item type
+     */
+    get getItemType() {
+        return this.itemType
+    }
+
+    /**
+     * This gets the inventory item unit purchase price
+     * 
+     * @return {unitPrice} inventory item unit purchase price
+     */
+    get getUnitPrice() {
+        return this.unitPrice
+    }
+
+    /**
+     * This gets the inventory item quantity
+     * 
+     * @return inventory item quantity
+     */
+    get getQuantity() {
+        return this.quantity
+    }
+
+    /**
+     * This sets the inventory item's unit purchase price to a specified unit purchase price
+     * 
+     * @param _unitPrice the new unit purchase price to be set
+     */
+    set setUnitPrice(_unitPrice) {
+        this.unitPrice = _unitPrice
+    }
+
+    /**
+     * This sets the inventory item's quantity to a specified quantity
+     * 
+     * @param _quantity the new quantity to be set
+     */
+    set setQuantity(_quantity) {
+        this.quantity = _quantity
+    }
+}
+
+/**
+ * This class, Inventory, holds all the items that exists in inventory table in the database
+ * It has get functions to be used to get all the items in inventory or all the name of the items in inventory
+ * It also has various functions to modify the database and update information locally
+ *
+ */
+class Inventory{
+    private 
+        items = []
+
+    /**
+     * This item constructor is referenced by DatabaseInterface
+     * 
+     * @param data JSON object returned from inventoryFunctions.js getInventory function
+     * @return {inventory} a constructed local Inventory
+     */
+    constructor(data = []) {
+        this.items = [];
+        for(let i = 0; i &lt; data.length; i++) {
+            var j = new InventoryItem(data[i].inventory_id, data[i].inventory_name, data[i].item_type, data[i].unit_purchase_price, data[i].quantity); 
+            this.items.push(j)
+        }
+    }
+    
+    /**
+     * This gets the all items in inventory
+     * 
+     * @return list of items in inventory
+     */
+    get getItems() {
+        return this.items
+    }
+
+    /**
+     * This gets the all items' name in inventory
+     * 
+     * @return list of items' name in inventory
+     */
+    get getAllNames() {
+        var names = []
+        for(let i = 0; i &lt; this.items.length; i++) {
+            names.push(this.items[i].getInventoryName)
+        }
+        return names
+    }
+
+    /**
+     * Checks if there is a inventory item name same to the given string exists in inventory
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be checked
+     * @return {Boolean} true if same name doesn't exist, false if it exists
+     */
+    checkInventoryItem(_inventoryName){
+        var count = 0;
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === _inventoryName) {
+                count++;
+            } 
+        }
+        if(count!==0){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    /**
+     * Adds a new inventory item created with appropriate inventory id found by findNextInventoryId() to the database(table: inventory) and update local inventory items list
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be added
+     * @param _itemType a string of type of inventory item that needs to be added
+     * @param _unitPrice a string of unit purchase price of inventory item that needs to be added
+     */
+    async addInventoryItem(_inventoryName, _itemType, _unitPrice){
+        const inventoryID = await findNextInventoryId()
+        var j = new InventoryItem(inventoryID,_inventoryName,_itemType,_unitPrice, 0);
+        this.items.push(j)
+        addInventoryItem(_inventoryName, _itemType, _unitPrice, 0)
+        
+    }
+
+    /**
+     * Deletes an inventory item with name given in parameter in the database(table: inventory) and update local inventory items list
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be deleted
+     */
+    deleteFromInventory(_inventoryName){
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === _inventoryName) {
+                deleteInventoryItem(_inventoryName)
+                this.items.splice(i, 1); 
+            }
+        }
+    }
+
+    /**
+     * Gets an inventory item using the name given in parameter
+     * 
+     * @param _inventoryName a string of name of inventory item
+     * @return {inventoryItem} inventory item
+     */
+    getInventoryItemFromName(itemName) {
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === itemName) {
+                return this.items[i]
+            } 
+        }
+    }
+
+    /**
+     * Updates an inventory item's unit purchase price to price given in parameter in the database(table: inventory) and update local inventory items list
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be updated
+     * @param _unitPrice a string of new unit purchase price the inventory item will have
+     */
+    updateInventoryPrice(_inventoryName, _unitPrice) {
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === _inventoryName) {
+                this.items[i].setUnitPrice = _unitPrice
+                updateInventoryItemPrice(_inventoryName, _unitPrice)
+            } 
+        }
+    }
+
+    /**
+     * Updates an inventory item's quantity to new quantity(given in parameter) + originial quantity in the database(table: inventory, inventory_order) and update local inventory items list
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be updated
+     * @param _ordered_quantity a string of additional quantity the inventory item will have
+     */
+    updateInventoryQuantity(_inventoryName, _ordered_quantity) {
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === _inventoryName) {
+                var new_quantity = parseInt(_ordered_quantity) + this.items[i].quantity
+                var ordered_price = this.items[i].getUnitPrice * _ordered_quantity
+                this.items[i].setQuantity = new_quantity
+                updateInventoryItemQuantity(_inventoryName, new_quantity);
+                addInventoryOrder(this.items[i].getInventoryID,_ordered_quantity,ordered_price,new_quantity);
+            } 
+        }
+    }
+
+    /**
+     * Decrease an inventory item's quantity by 1 in the database(table: inventory) and update local inventory items list
+     * 
+     * @param _inventoryName a string of name of inventory item that needs to be updated
+     */
+    decrementInventoryQuantity(_inventoryName) {
+        for(let i = 0; i &lt; this.items.length; i++) {
+            if(this.items[i].getInventoryName === _inventoryName) {
+                var new_quantity = this.items[i].quantity - 1
+                this.items[i].setQuantity = new_quantity
+                updateInventoryItemQuantity(_inventoryName, new_quantity);
+            } 
+        }
+    }
+}
+
+
+export { InventoryItem, Inventory, }</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

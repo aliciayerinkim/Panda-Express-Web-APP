@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/OrderConfirmation.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/OrderConfirmation.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//import React from 'react';
+import React, {useState, useEffect} from 'react';
+import '../components/styles.scss';
+import { useNavigate } from "react-router-dom";
+import HomeNav from "../components/HomeNav";
+import EmployeeNav from '../components/EmployeeNav';
+import { Col, Row, Button, Card, Container, ToggleButtonGroup, ToggleButton, ButtonGroup } from 'react-bootstrap';
+import { Order } from '../classes/Order';
+import { sendOrder} from "../connections/orderFunctions";
+import { Meal } from '../classes/Meal'
+import Maps from '../components/Maps'
+//import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+
+/**
+ * Order confirmation view for a customer-side
+ * order. Displays everything that was ordered,
+ * the order ID, and the total cost of that order.
+ * @param {Array} orderInProgress - The current order in progress.
+ * @param {Setter} setOrderInProgress - The setter function for the current order in progress.
+ * @author Joseph Quismorio
+ */
+
+function OrderConfirmation({ orderInProgress, setOrderInProgress }){
+    const [width, setWidth] = useState(window.innerWidth);
+    const breakpoint = 1200;
+
+    useEffect(() => {
+      window.addEventListener("resize", () => setWidth(window.innerWidth));
+    }, []);
+
+    let preTaxPrice = 0;
+
+    for (let i = 0; i &lt; orderInProgress.length; i++){
+      preTaxPrice += orderInProgress[i].price;
+    }
+
+    let tax = preTaxPrice * 0.0825;
+    let totalPrice = preTaxPrice + tax;
+
+    const removeFromorderInProgress = (productToRemove) => {
+      setOrderInProgress(orderInProgress.filter((product) => product !== productToRemove));
+    };
+
+    const navigate = useNavigate();
+
+    return (
+        (&lt;div>
+          {window.location.pathname === '/dashboard/checkout' ? &lt;EmployeeNav/> : &lt;HomeNav />}
+            &lt;Container className="container" style={{marginTop: '18vh', marginBottom: '6vh'}}>
+              &lt;Row className="justify-content-between">
+                &lt;Col>
+                  &lt;Button variant="panda-btn" size="md" className="bg-red text-white mb-4" href='/order/' style={{fontWeight: 800}}>ORDER MORE&lt;/Button>
+                    {localStorage.getItem('isLoggedIn') === 'true' ? &lt;h3 className="mb-4" style={{fontWeight: 600, textTransform: 'uppercase'}}>THANK YOU, {JSON.parse(localStorage.getItem('user')).given_name}!&lt;/h3> : &lt;h3 className="mb-4" style={{fontWeight: 600}}>THANK YOU!&lt;/h3>}
+                   {(orderInProgress.length === 0)? &lt;div>&lt;/div> : &lt;h5>Your order total was ${orderInProgress[1].toFixed(2)}&lt;/h5>}
+                   {(orderInProgress.length === 0)? &lt;div>&lt;/div> : &lt;h5>Your order number is #{orderInProgress[2]}&lt;/h5>}
+                   ORDER:
+                  {(orderInProgress.length === 0)? &lt;h6>Add some items to your order.&lt;/h6> :
+                    orderInProgress[0].map((item) => (
+                      &lt;Card key={item.name} style={{ width: '42vw', boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}} className="card mr-4 mb-4">
+                        &lt;Row className="p-4">
+                          &lt;Col>
+                              &lt;img src={require(`../images/${item.name}.png`)} alt="" className="img-fluid"/>
+                            &lt;/Col>
+                            &lt;Col className="my-auto">
+                              &lt;h6 style={{fontWeight: '600'}}>{item.name} x{item.noItems}&lt;/h6>
+                              &lt;p style={{ fontSize: '12px', fontWeight: '400'}}>{item.entrees.length === 0 ? `${item.addOnItem}` : `${item.side}, ${item.entrees}`}&lt;/p>
+                            &lt;/Col>
+                            &lt;Col className="text-right my-auto">
+                            &lt;/Col>
+                        &lt;/Row>
+                      &lt;/Card>
+                    ))
+                    
+                  }
+                &lt;Row className='justify-content-center mb-4'>
+                    &lt;Maps/>
+                &lt;/Row>
+                &lt;/Col>
+              &lt;/Row>
+            &lt;/Container>
+        &lt;/div>)
+      );
+}
+export default OrderConfirmation;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

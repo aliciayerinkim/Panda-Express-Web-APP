@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/AddMenuItem.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/AddMenuItem.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
+import '../components/styles.scss';
+import '../components/livealert.js';
+import ManagerNav from "../components/ManagerNav";
+import Footer from "../components/Footer";
+import { Button, Form, Col} from 'react-bootstrap';
+import {useState, useEffect} from 'react';
+import { updateMenu } from "../connections/menuFunctions";
+import { getInventory } from '../connections/inventoryFunctions';
+import { Menu } from "../classes/Menu";
+import { Inventory } from "../classes/Inventory";
+
+/**
+ * Adds an item to the menu.
+ * @author Molly Frost, Joseph Quismorio
+ */
+const AddMenuItem = () => {
+
+  const [menu, setMenu] = useState(new Menu())
+
+  useEffect(() => {
+    async function getMenu() {
+      let data = await updateMenu();
+      var menuN = new Menu(data);
+      setMenu(menuN);
+    }
+    getMenu();
+  }, []);
+
+  const [inventory, setInventory] = useState(new Inventory())
+
+    useEffect(() => {
+      async function getInv() {
+        let data = await getInventory();
+        var inv = new Inventory(data);
+        setInventory(inv);
+      }
+      getInv();
+    }, []);
+
+  const [menuName, setMenuName] = useState(null);
+  const [menuPrice, setMenuPrice] = useState(null);
+  const [menuIngredients, setMenuIngredients] = useState([]);
+
+  const handleChangeName = event => {
+    setMenuName(event.target.value);
+    console.log('value is:', event.target.value);
+  };
+
+  const handleChangePrice = event => {
+    setMenuPrice(event.target.value);
+    console.log('value is:', event.target.value);
+  };
+
+  console.log(menuIngredients)
+
+  /**
+   * Checks for the correct inputs in order to add
+   * a menu item. If any of the inputs are invalid
+   * or empty, returns an alert message signifying an error.
+   */
+  function checkSubmition() {
+    const category = document.getElementById('inputGroupSelect01');
+    if (category.value &lt; 0){
+      alert("ERROR: Please select a category.");
+    }else if(menuName === null | !isNaN(+menuName)){
+      alert("ERROR: Please fill out 'Name of Menu Item' correctly.");
+    }else if (menuPrice === null | isNaN(+menuPrice) || Number.parseFloat(menuPrice) &lt;= 0){
+      alert("ERROR: Fill out a positive 'Price of Menu Item': $0.00");
+    }else if(menuIngredients === null | !isNaN(+menuIngredients)){
+      alert("ERROR: Please fill out 'Add Item's Ingredients' correctly.");
+    }else{
+      let success = true;
+      const price = Number.parseFloat(menuPrice).toFixed(2);
+      var ingredientStringArr = menuIngredients;
+      var ingredLength = ingredientStringArr.length;
+      for (let i = 0; i &lt; ingredLength; i++){
+        if(!inventory.checkInventoryItem(ingredientStringArr[i])){
+          success = false;
+          break;
+        }
+      }
+      if(success){
+        var ingredientArr = []
+        for (let i = 0; i &lt; ingredLength; i++){
+          ingredientArr.push(inventory.getInventoryItemFromName(ingredientStringArr[i]))
+        }
+        console.log(ingredientArr);
+        menu.addToMenu(menuName, price, category.value, ingredientArr );
+        alert("SUCCESS: " + menuName + "was successfully changed added to the menu!");
+      }else{
+        alert("ERROR: An error has occured. Please try again");
+      }
+    }
+  }
+
+    return (
+        &lt;div className="edit_menu_price">
+          &lt;ManagerNav />
+          &lt;div class="container">
+            &lt;div class="container overflow-hidden text-center">
+              &lt;h1 class="mb-3" style={{fontWeight: 800}}>Add Menu Item&lt;/h1>
+            &lt;/div>
+            &lt;div class="row align-items-center justify-content-center my-5 text-center">
+              &lt;div class="col-lg-4 text-center">
+                &lt;div class="input-group mb-3">
+                  &lt;span variant="panda-btn btn-block mt-3" class="bg-red btn text-white" size="lg" id="basic-addon1" style={{backgroundColor: '#D02B2E', fontWeight: 800, color: '#D02B2E'}}>Name of Menu Item:&lt;/span>
+                  &lt;input type="text" size="lg" onChange={handleChangeName} value={menuName} class="form-control" placeholder="Enter a name..." aria-label="Enter a name..." aria-describedby="basic-addon1" style={{fontWeight: 800}}>&lt;/input>
+                &lt;/div>
+                &lt;div class="input-group mb-3">
+                  &lt;span variant="panda-btn btn-block mt-3" class="bg-red btn text-white" size="lg" id="basic-addon1" style={{backgroundColor: '#D02B2E', fontWeight: 800, color: '#D02B2E'}}>Price of Menu Item:&lt;/span>
+                  &lt;input type="int" size="lg" onChange={handleChangePrice} value={menuPrice} class="form-control" placeholder="Enter a price..." aria-label="Enter a price..." aria-describedby="basic-addon1" style={{fontWeight: 800}}>&lt;/input>
+                &lt;/div>
+                &lt;div class="input-group mb-3">
+                  &lt;select class="form-select" id="inputGroupSelect01">
+                    &lt;option value="-1" selected>Select Category&lt;/option>
+                    &lt;option value="0">Side&lt;/option>
+                    &lt;option value="1">Entree&lt;/option>
+                    &lt;option value="2">Drink&lt;/option>
+                    &lt;option value="3">Seasonal Side&lt;/option>
+                    &lt;option value="4">Seasonal Entree&lt;/option>
+                    &lt;option value="5">Seasonal Drink&lt;/option>
+                  &lt;/select>
+                &lt;/div>
+                &lt;div class="input-group mb-3">
+                &lt;Form.Group as={Col} controlId="my_multiselect_field">
+                    &lt;Form.Label>Choose Ingredients (Hold Ctrl/Cmd to select multiple)&lt;/Form.Label>
+                    &lt;Form.Control as="select" multiple onChange={e => setMenuIngredients([].slice.call(e.target.selectedOptions).map(item => item.value))}>
+                      { 
+                        inventory.getItems.map((item) => (
+                          &lt;option value={`${item.getInventoryName}`}>{item.getInventoryName}&lt;/option>
+                        ))
+                      }
+                    &lt;/Form.Control>
+                  &lt;/Form.Group>
+                &lt;/div>
+                &lt;div class="text-center mb-3">
+                  &lt;Button variant="panda-btn mt-3" onClick={checkSubmition} size="medium" class="bg-red text-white btn" style={{fontWeight: 800}}>SUBMIT&lt;/Button>
+                &lt;/div>
+              &lt;/div>
+            &lt;/div>  
+          &lt;/div>
+          &lt;Footer />
+        &lt;/div>
+    );
+}
+
+export default AddMenuItem; </code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/DrinkOrderEmployee.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/DrinkOrderEmployee.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import '../components/styles.scss';
+import HomeNav from "../components/HomeNav";
+import Footer from "../components/Footer";
+import { updateMenu } from "../connections/menuFunctions";
+import { Menu } from "../classes/Menu";
+import { Container, Col, Row, Button, Card, Collapse, ButtonGroup } from 'react-bootstrap';
+import EmployeeNav from './EmployeeNav';
+
+let nextId = 0;
+/**
+ * Lets a server add a drink item to an order.
+ * @param {Array} cart - The current cart.
+ * @param {Setter} setCart - The setter function for the current cart.
+ * @author Molly Frost
+ */
+function DrinkOrderEmployee({cart, setCart}){
+    const navigate = useNavigate();
+    const query = new URLSearchParams(useLocation().search);
+    const id = query.get("id");
+    const [drinks, setDrinks] = useState([]);
+    const [width, setWidth] = useState(window.innerWidth);
+    const [open, setOpen] = useState(false);
+
+    const breakpoint = 1200;
+
+    useEffect(() => {
+      window.addEventListener("resize", () => setWidth(window.innerWidth));
+    }, []);
+
+    const [menu, setMenu] = useState(new Menu())
+
+    useEffect(() => {
+      async function getMenu() {
+        let data = await updateMenu();
+        var menuN = new Menu(data);
+        setMenu(menuN);
+      }
+      getMenu();
+    }, []);
+    
+    var mealName = id;
+    mealName = mealName.replace(/-/g, ' ');
+    mealName = mealName.split(" ");
+    for (let i = 0; i &lt; mealName.length; i++) {
+      mealName[i] = mealName[i][0].toUpperCase() + mealName[i].substr(1);
+    }
+    
+    mealName = mealName.join(" ");
+
+    const [drinkPrice, setDrinkPrice] = useState(0);
+
+    const [number, setNumber] = useState(1);
+
+    const increment = () => {
+      setNumber(prevCount => prevCount + 1);
+      setDrinkPrice(prevPrice => prevPrice + drinks[0].price);
+    };
+
+    const decrement = () => {
+      setNumber(prevCount => prevCount - 1);
+      setDrinkPrice(prevPrice => prevPrice - drinks[0].price);
+    };
+
+    const addDrinks = (drinkName, drinkId, drinkPrice) => {
+        if (drinks.length >= 1){
+          alert("Entree limit exceeded.");
+        }else{
+          setDrinks([...drinks, {id: nextId++, name: drinkName, itemId: drinkId, price: drinkPrice, category: 'Drink'}]);
+          setDrinkPrice(prevPrice => prevPrice + drinkPrice);
+        }
+    };
+
+    const deleteDrinks = (item) => {
+      setDrinks(drinks.filter(m => m.id !== item.id))
+      setNumber(1);
+      setDrinkPrice(0);
+    }
+  
+    const checkDrink = () => {
+    if (drinks.length === 0){
+        alert("Please add items to your meal.");
+    }else {
+        let items = [];
+
+        for (let i = 0; i &lt; drinks.length; i++) {
+        items.push(drinks[i].name);
+        }
+
+        items = items.join(', ');
+
+        let newCart = [...cart];
+
+        let cartItem = {name: "Drink", side: items, entrees: "", price: (drinks[0].price * number), addOnItem: items, itemId: drinks[0].itemId, noItems: number};
+
+        newCart.push(cartItem);
+
+        setCart(newCart);
+        let navWhere;
+        if (window.location.pathname === '/dashboard/create-order/'){
+          navWhere = '/dashboard/checkout'
+        }else if (window.location.pathname === '/order/create-order/'){
+          navWhere = '/order/checkout'
+        }
+        
+        navigate(navWhere);
+    }
+    }
+
+    return (
+        width &lt; breakpoint ?
+        (&lt;div>
+          {window.location.pathname === '/dashboard/create-order/' ? &lt;EmployeeNav/> : &lt;HomeNav />}
+            &lt;Container className="container" style={{marginTop: '18vh', marginBottom: '14vh'}}>
+            &lt;Button variant="panda-btn" size="md" onClick={() => navigate(-1)} style={{fontWeight: 800}} className="mt-2 mb-4">BACK TO MENU&lt;/Button>{' '}
+              &lt;Row className="mx-auto">
+                &lt;Col>
+                  &lt;Row>
+                    &lt;h1 className="mb-2 text-left" style={{fontWeight: 800}}>DRINKS&lt;/h1>
+                    &lt;p className="mb-4 text-left" style={{fontWeight: 400}}>Choose A Refreshing Beverage&lt;/p>
+                    {menu.getAllDrinks.map((drink) => (
+                      &lt;Card key={drink.getProductName} onClick={() => addDrinks(drink.getProductName, drink.getMenuItemId, drink.getSalePrice)} className='d-inline-flex mb-2' style={{cursor: "pointer", padding: "10px 0px 10px 0px", boxShadow: "rgb(0 0 0 / 16%) 1px 1px 5px"}}>
+                        &lt;Row>
+                          &lt;Col className="my-auto">
+                            &lt;h6 style={{textTransform: 'uppercase', fontWeight: '600'}}>{drink.getProductName}&lt;/h6>
+                          &lt;/Col>
+                        &lt;/Row>
+                      &lt;/Card>))}
+                  &lt;/Row>
+                &lt;/Col>
+              &lt;/Row>
+              &lt;br />
+              &lt;div className="fixed-bottom">
+              &lt;div className='bg-red'>
+                    &lt;Row className='w-auto'>
+                        &lt;Col xs={7} md={8} className='text-white text-left'>
+                            &lt;div className="my-3 ml-4">
+                                &lt;h5 style={{textTransform: 'uppercase', fontWeight: '600'}}>{mealName}&lt;/h5>
+                                &lt;h6 style={{fontSize: '14px'}}>
+                                    {(drinks.length === 0) ? "Add some items." : `${drinks[0].name}`}
+                                &lt;/h6>
+                            &lt;/div>
+                        &lt;/Col>
+                        &lt;Col xs={5} md={4} className='text-right'>
+                            &lt;Button
+                                variant="panda-btn-alt" size="md" style={{fontWeight: 800, color: '#D02B2E'}} className="my-4 mr-4"
+                                onClick={() => setOpen(!open)}
+                                aria-controls="example-collapse-text"
+                                aria-expanded={open}
+                            >
+                                VIEW MEAL
+                            &lt;/Button>
+                        &lt;/Col>
+                    &lt;/Row>
+                  &lt;/div>
+                  &lt;div style={{backgroundColor: 'white'}}>
+                    &lt;Collapse in={open}>
+                      &lt;div id="example-collapse-text" >
+                          {
+                            drinks.map((item) => (
+                            &lt;Row key={item.name} className='d-inline-flex my-3' style={{width: "100%"}}>
+                              &lt;Col className='my-auto'>
+                                &lt;h6 style={{textTransform: 'uppercase', fontWeight: '600'}}>{item.name}&lt;/h6>
+                                &lt;h6 style={{ fontWeight: '400'}}>{item.category}&lt;/h6>
+                              &lt;/Col>
+                              &lt;Col className="my-auto text-right">
+                              &lt;Button variant="panda-btn" size="md" className="bg-red text-white" onClick={() => deleteDrinks(item)} style={{fontWeight: 800}}>REMOVE&lt;/Button>
+                              &lt;/Col>
+                            &lt;/Row>))
+                          }
+                          &lt;div className="text-center" style={{width: "100%", backgroundColor: "#f7f7f6", borderTop: "1px solid #cbcbcb"}}>
+                            &lt;Row className='d-inline-flex my-3' style={{width: "100%"}}>
+                              &lt;Col>
+                                &lt;Button disabled={(drinks.length === 0)} variant="panda-btn" size="md" className="mt-2 bg-red text-white" onClick={() => checkDrink()} style={{fontWeight: 800, width: "100%"}}>ADD TO ORDER&lt;/Button>
+                              &lt;/Col>
+                            &lt;/Row>
+                          &lt;/div>
+                      &lt;/div>
+                    &lt;/Collapse>
+                  &lt;/div>
+              &lt;/div>
+            &lt;/Container>
+        &lt;/div>)
+        :
+        (&lt;div>
+          {window.location.pathname === '/dashboard/create-order/' ? &lt;EmployeeNav/> : &lt;HomeNav />}
+            &lt;Container className="container" style={{marginTop: '18vh', marginBottom: '14vh'}}>
+              &lt;Row>
+                &lt;Col>
+                  &lt;Row>
+                    &lt;h1 className="mb-2 text-left" style={{fontWeight: 800}}>DRINKS&lt;/h1>
+                    &lt;p className="mb-4 text-left" style={{fontWeight: 400}}>Choose A Refreshing Beverage&lt;/p>
+                    {menu.getAllDrinks.map((drink) => (
+                    &lt;Card key={drink.getProductName} onClick={() => addDrinks(drink.getProductName, drink.getMenuItemId, drink.getSalePrice)} style={{cursor: "pointer", width: '14rem', boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px"}} className="mx-2 mb-2">
+                      &lt;Card.Body className="text-center">
+                        &lt;Card.Title style={{ fontWeight: '800'}} >{drink.getProductName}&lt;/Card.Title>
+                      &lt;/Card.Body>
+                    &lt;/Card>
+                  ))}
+                  &lt;/Row>
+                &lt;/Col>
+                &lt;Col xs={5}>
+                  &lt;Card style={{ width: '35vw', height: '65vh', boxShadow: "rgb(0 0 0 / 16%) 1px 1px 10px", transition: "all 100s ease-in-out"}} className="position-fixed ml-4">
+                    &lt;Card.Header style={{ height: '5rem'}}>
+                        &lt;Card.Title className="mt-1 text-center" style={{ fontWeight: '800'}}>CURRENT MEAL&lt;/Card.Title>
+                        &lt;Card.Text className="text-center" style={{fontSize: '14px'}}>
+                          Add some items to your meal.
+                        &lt;/Card.Text>
+                    &lt;/Card.Header>
+                    &lt;Card.Body style={{overflowY: 'scroll'}}>
+                      {
+                        drinks.map((item) => (
+                        &lt;Row key={item.name} className='d-inline-flex mb-3'>
+                          &lt;Col>
+                            &lt;h6 style={{textTransform: 'uppercase', fontWeight: '600'}}>{item.name}&lt;/h6>
+                            &lt;h6 style={{ fontWeight: '400'}}>{item.category}&lt;/h6>
+                          &lt;/Col>
+                          &lt;Col className="text-right">
+                          &lt;Button variant="panda-btn" size="sm" className="mt-2 bg-red text-white" onClick={() => deleteDrinks(item)} style={{fontWeight: 800}}>REMOVE ITEM&lt;/Button>
+                          &lt;/Col>
+                        &lt;/Row>))
+                      }
+                    &lt;/Card.Body>
+                    &lt;Card.Footer style={{height: '4rem'}}>
+                      &lt;Row>
+                        &lt;Col xs={3}>
+                          &lt;h5 className="ml-2 mt-2" style={{textTransform: 'uppercase', fontWeight: '600'}}>${drinkPrice.toFixed(2)}&lt;/h5>
+                        &lt;/Col>
+                        &lt;Col className="d-flex justify-content-right my-auto">
+                          &lt;ButtonGroup size="sm" className="mt-1" aria-label="Basic example" style={{borderStyle: 'solid', borderColor: '#D02B2E', fontWeight: 800}}>
+                            &lt;Button variant="panda-btn" style={{fontWeight: 800}} onClick={() => decrement()} disabled={number === 1 || (drinks.length === 0)}>-&lt;/Button>
+                            &lt;div className="my-auto">
+                              &lt;p className="mx-3 my-auto">{number}&lt;/p>
+                            &lt;/div>
+                            &lt;Button variant="panda-btn" style={{fontWeight: 800}} onClick={() => increment()} disabled={(drinks.length === 0)}>+&lt;/Button>
+                          &lt;/ButtonGroup>
+                        &lt;/Col>
+                        &lt;Col className="text-right">
+                          &lt;Button disabled={(drinks.length === 0)} variant="panda-btn" size="md" className="mt-1 mr-2 bg-red text-white" onClick={() => checkDrink()} style={{fontWeight: 800}}>ADD TO ORDER&lt;/Button>
+                        &lt;/Col>
+                      &lt;/Row>
+                    &lt;/Card.Footer>
+                  &lt;/Card>
+                &lt;/Col>
+              &lt;/Row>
+            &lt;/Container>
+          &lt;Footer/>
+        &lt;/div>)
+      );
+}
+export default DrinkOrderEmployee;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Directions.html">Directions</a></li><li><a href="Inventory.html">Inventory</a></li><li><a href="InventoryItem.html">InventoryItem</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ALCOrder">ALCOrder</a></li><li><a href="global.html#ALCOrderEmployee">ALCOrderEmployee</a></li><li><a href="global.html#AddInventoryItem">AddInventoryItem</a></li><li><a href="global.html#AddMenuItem">AddMenuItem</a></li><li><a href="global.html#Checkout">Checkout</a></li><li><a href="global.html#CheckoutEmployee">CheckoutEmployee</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#DeleteInventoryItem">DeleteInventoryItem</a></li><li><a href="global.html#DeleteMenuItem">DeleteMenuItem</a></li><li><a href="global.html#DrinkOrder">DrinkOrder</a></li><li><a href="global.html#DrinkOrderEmployee">DrinkOrderEmployee</a></li><li><a href="global.html#EditInventoryPrice">EditInventoryPrice</a></li><li><a href="global.html#EditMenuPrice">EditMenuPrice</a></li><li><a href="global.html#EmployeeLogin">EmployeeLogin</a></li><li><a href="global.html#EmployeeNav">EmployeeNav</a></li><li><a href="global.html#Footer">Footer</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#HomeNav">HomeNav</a></li><li><a href="global.html#InventoryOrder">InventoryOrder</a></li><li><a href="global.html#ManagerDashboard">ManagerDashboard</a></li><li><a href="global.html#ManagerNav">ManagerNav</a></li><li><a href="global.html#Maps">Maps</a></li><li><a href="global.html#MealOrder">MealOrder</a></li><li><a href="global.html#MealOrderEmployee">MealOrderEmployee</a></li><li><a href="global.html#Order">Order</a></li><li><a href="global.html#OrderConfirmation">OrderConfirmation</a></li><li><a href="global.html#Reports">Reports</a></li><li><a href="global.html#UserLogin">UserLogin</a></li><li><a href="global.html#ViewInventory">ViewInventory</a></li><li><a href="global.html#loc">loc</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Tue Dec 06 2022 16:28:01 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

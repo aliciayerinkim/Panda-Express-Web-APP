@@ -1,0 +1,103 @@
+* {
+    font-family: sofia-pro, sans-serif;
+}
+.app-logo {
+    width: 4em;
+    padding-left: 10px;
+}
+
+.bg-red {
+    background-color: #D02B2E;
+}
+
+.text-panda {
+    color: #D02B2E;
+}
+
+.nav-btn {
+    font-weight: 900;
+}
+
+$theme-colors: (
+   panda-btn: #D02B2E,
+   panda-btn-alt: white,
+);
+
+.row-div {
+    height: 79vh;
+    margin: 10px 0;
+}
+
+.auth-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 80vh;
+  }
+  
+.auth-form {
+    width: 420px;
+    box-shadow: rgb(0 0 0 / 16%) 1px 1px 10px;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    border-radius: 8px;
+    background-color: white;
+}
+  
+.auth-form-content {
+    padding-left: 12%;
+    padding-right: 12%;
+}
+
+.auth-form-title {
+    text-align: center;
+    margin-bottom: 1em;
+    font-size: 24px;
+    color: rgb(34, 34, 34);
+    font-weight: 800;
+}
+
+label {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(34, 34, 34);
+}
+
+.card:hover {
+    transform: scale(1.05);
+    color: #D02B2E;
+}
+
+.card {
+    transition: transform 0.2s ease;
+}
+
+.body { 
+    padding-top: 100px; 
+    padding-bottom: 45px; 
+}
+
+a.card {
+    color: inherit;
+    text-decoration: inherit;
+}
+a.card button {
+    z-index: 1;
+}
+
+a.card.disabled,
+a.card[disabled] {
+    pointer-events: none;
+    opacity: .8;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.fade-in-image { animation: fadeIn 1s; }
+
+/* import bootstrap to set changes */
+@import "~bootstrap/scss/bootstrap";
