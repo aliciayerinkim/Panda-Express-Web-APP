@@ -273,9 +273,9 @@ class Directions extends Component {
 function Maps(){
 
   const {isLoaded} = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey:"AIzaSyAtO-aoWncgkDfaLDoI2EhIJHjRlrUNhuM",
-    libraries:['places']
+//     id: 'google-map-script',
+//     googleMapsApiKey:"AIzaSyAtO-aoWncgkDfaLDoI2EhIJHjRlrUNhuM",
+//     libraries:['places']
   })
 
   return isLoaded ? (
